@@ -1,0 +1,24 @@
+{
+  "products": [
+    { "id": "p1", "name": "Souris sans fil USB", "sku": "INF-001", "category": "Informatique", "price": 7500, "cost": 4000, "stock": 22, "threshold": 6, "barcode": "3012345678901" },
+    { "id": "p2", "name": "Clavier AZERTY USB", "sku": "INF-014", "category": "Informatique", "price": 12500, "cost": 7000, "stock": 16, "threshold": 5, "barcode": "3012345678918" },
+    { "id": "p3", "name": "Câble HDMI 2 m", "sku": "AV-031", "category": "Audiovisuel", "price": 5000, "cost": 2500, "stock": 25, "threshold": 8, "barcode": "3012345678925" },
+    { "id": "p4", "name": "Casque audio stéréo", "sku": "AV-008", "category": "Audiovisuel", "price": 18000, "cost": 9500, "stock": 4, "threshold": 5, "barcode": "3012345678932" },
+    { "id": "p5", "name": "Webcam Full HD", "sku": "INF-002", "category": "Informatique", "price": 30000, "cost": 17500, "stock": 12, "threshold": 4, "barcode": "3012345678949" },
+    { "id": "p6", "name": "Adaptateur USB-C multiport", "sku": "INF-017", "category": "Informatique", "price": 25000, "cost": 14000, "stock": 14, "threshold": 4, "barcode": "3012345678956" },
+    { "id": "p7", "name": "Enceinte Bluetooth portable", "sku": "AV-022", "category": "Audiovisuel", "price": 45000, "cost": 27000, "stock": 7, "threshold": 8, "barcode": "3012345678963" },
+    { "id": "p8", "name": "Vidéoprojecteur HDMI", "sku": "AV-011", "category": "Audiovisuel", "price": 275000, "cost": 210000, "stock": 3, "threshold": 2, "barcode": "3012345678970" }
+  ],
+  "users": [
+    { "id": "u1", "name": "Administrateur", "email": "admin@shopkosomba.cg", "role": "Administratrice", "permissions": ["Ventes", "Stock", "Factures", "Utilisateurs"], "active": true }
+  ],
+  "documents": [
+    { "id": "FAC-2026-0041", "type": "Facture", "dateOffsetDays": 0, "client": "Client particulier", "total": 17500, "status": "Payée", "items": [{ "name": "Souris sans fil USB", "qty": 1, "price": 7500 }, { "name": "Câble HDMI 2 m", "qty": 2, "price": 5000 }] },
+    { "id": "TCK-2026-0086", "type": "Ticket", "dateOffsetDays": 1, "client": "Client comptoir", "total": 68000, "status": "Payé", "items": [{ "name": "Enceinte Bluetooth portable", "qty": 1, "price": 45000 }, { "name": "Câble HDMI 2 m", "qty": 1, "price": 5000 }, { "name": "Casque audio stéréo", "qty": 1, "price": 18000 }] },
+    { "id": "FAC-2026-0040", "type": "Facture", "dateOffsetDays": 3, "client": "Entreprise cliente", "total": 341500, "status": "Payée", "items": [{ "name": "Casque audio stéréo", "qty": 3, "price": 18000 }, { "name": "Clavier AZERTY USB", "qty": 1, "price": 12500 }, { "name": "Vidéoprojecteur HDMI", "qty": 1, "price": 275000 }] }
+  ],
+  "activity": [
+    { "text": "Bienvenue chez Shop Kosomba ! Votre espace est prêt.", "date": "seed-now", "icon": "sparkles" },
+    { "text": "Vos alertes de stock apparaîtront ici.", "date": "seed-now", "icon": "package" }
+  ]
+}
