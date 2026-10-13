@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /api/
+Disallow: /images/
+Allow: /
+
+Sitemap: https://shop-kosomba.netlify.app/

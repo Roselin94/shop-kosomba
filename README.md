@@ -4,7 +4,7 @@ Application de vente et de gestion de stock pour la boutique informatique et aud
 
 ## Démarrer en local
 
-Prérequis : Node.js 24 LTS ou plus récent.
+Prérequis : Node.js 22.12 ou plus récent.
 
 ```powershell
 npm start
@@ -22,6 +22,10 @@ Dans **Point de vente**, l’administrateur peut créer un produit avec son prix
 
 Quand un vendeur enregistre un ticket ou une facture, chaque administrateur actif reçoit une notification persistante dans sa cloche. Le compteur se met à jour automatiquement; ouvrir la notification affiche le document de vente et la marque comme lue.
 
-## Déploiement
+## Déploiement Netlify + Render
 
-Le serveur écoute uniquement sur `127.0.0.1` par défaut. Ce projet constitue une base locale fonctionnelle, pas encore un service public hébergé. Pour l’ouvrir depuis Internet ou d’autres appareils, il faut le déployer sur un serveur sécurisé en HTTPS, configurer sauvegardes, supervision et gestion des secrets, et revoir l’exposition réseau de SQLite.
+Netlify héberge l’interface statique du dossier `dist`; l’API Node, la base SQLite et les photos restent hébergées sur Render. Le fichier `dist/_redirects` transmet `/api/*` et `/images/*` au service Render `shop-kosomba`. Si Render attribue une autre URL au service, remplacez `shop-kosomba.onrender.com` dans ce fichier avant le déploiement Netlify.
+
+Créez d’abord le service Render avec le Blueprint `render.yaml` à la racine du dépôt. Il utilise une instance payante `starter` et un disque persistant de 1 Go. Après avoir créé le site Netlify, définissez dans les variables d’environnement du service Render `APP_ORIGIN` sur l’origine exacte du site, par exemple `https://nom-du-site.netlify.app`, puis redéployez l’API. Cela autorise les opérations d’écriture provenant du site.
+
+Pour Netlify, téléversez le contenu de `dist` (qui doit contenir seulement `index.html` et `_redirects`). Après le déploiement, ouvrez le site et créez le compte administrateur. Configurez des sauvegardes régulières du disque Render avant d’y enregistrer des données commerciales. Le fichier local `important.txt` est ignoré par Git et ne doit jamais être ajouté au dépôt.

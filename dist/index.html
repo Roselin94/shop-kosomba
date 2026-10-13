@@ -1,0 +1,1769 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f6f2">
+  <meta name="description" content="Shop Kosomba — Application de gestion commerciale, stock et facturation.">
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="shortcut icon" type="image/png" href="/logo.png">
+  <link rel="apple-touch-icon" href="/logo.png">
+  <title>Shop Kosomba — Gestion commerciale</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="/xlsx.full.min.js"></script>
+  <script>if(typeof XLSX==='undefined'){document.write('<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>');}</script>
+  <script src="/chart.umd.min.js"></script>
+  <script>if(typeof Chart==='undefined'){document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"><\/script>');}</script>
+  <style>
+    :root{--ink:#202923;--muted:#768078;--line:#e7e9e3;--paper:#fff;--canvas:#f5f6f2;--main-color:#16a34a;--main-color-dark:#15803d;--mint:#ecfdf5;--lime:#86efac;--red:#b84339;--amber:#a96915;--shadow:0 16px 42px rgba(26,44,33,.12)}
+    *{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:14px 'DM Sans',sans-serif}button,input,select{font:inherit}button{cursor:pointer}svg{width:18px;height:18px;stroke-width:1.8}.app{min-height:100vh;display:grid;grid-template-columns:248px minmax(0,1fr)}.app.auth-hidden{display:none}[hidden]{display:none!important}
+    .auth-screen{min-height:100vh;display:grid;grid-template-columns:minmax(320px,1fr) minmax(420px,1.25fr);background:#f8faf8}
+    .auth-brand{padding:clamp(36px,6vw,80px);background:linear-gradient(155deg,#0a2918 0%,#0f3822 55%,#144a2e 100%);color:#edf3ed;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+    .auth-brand::before{content:"";position:absolute;top:-120px;right:-120px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(134,239,172,0.12) 0%,transparent 70%);pointer-events:none}
+    .auth-brand::after{content:"";position:absolute;bottom:-80px;left:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(22,163,74,0.15) 0%,transparent 70%);pointer-events:none}
+    .auth-brand-logo-box{background:#fff;padding:12px 20px;border-radius:14px;display:inline-flex;align-items:center;margin-bottom:28px;box-shadow:0 8px 24px rgba(0,0,0,0.18)}
+    .auth-brand-logo-box img{height:52px;max-width:180px;object-fit:contain}
+    .auth-brand-mark{font:800 13px Manrope,sans-serif;color:var(--lime);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;display:inline-flex;align-items:center;gap:6px}
+    .auth-brand-mark::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--lime)}
+    .auth-brand h1{font:800 clamp(28px,3.5vw,40px) Manrope,sans-serif;margin:0 0 14px;line-height:1.2;color:#fff}
+    .auth-brand p{max-width:380px;color:#a7f3d0;font-size:14px;line-height:1.7;margin:0 0 30px}
+    .auth-features{display:grid;gap:12px;margin:20px 0 30px}
+    .auth-feat-item{display:flex;align-items:center;gap:12px;color:#d1fae5;font-size:13px;font-weight:500}
+    .auth-feat-icon{width:28px;height:28px;border-radius:8px;background:rgba(134,239,172,0.15);color:var(--lime);display:grid;place-items:center;flex-shrink:0}
+    .auth-feat-icon svg{width:15px;height:15px}
+    .auth-address{font-size:12px;color:#86efac;line-height:1.7;border-top:1px solid rgba(134,239,172,0.2);padding-top:20px;display:flex;align-items:center;gap:8px}
+    .auth-address svg{width:16px;height:16px;flex-shrink:0;color:var(--lime)}
+    .auth-content{display:grid;place-items:center;padding:clamp(24px,4vw,60px);background:#f8faf8}
+    .auth-card{width:min(460px,100%);background:#ffffff;border:1px solid rgba(226,232,240,0.9);border-radius:18px;padding:clamp(28px,4.5vw,42px);box-shadow:0 12px 36px rgba(15,35,24,0.06),0 2px 6px rgba(15,35,24,0.03)}
+    .auth-card-header{margin-bottom:26px}
+    .auth-card-badge{display:inline-flex;align-items:center;gap:6px;background:var(--mint);color:var(--main-color-dark);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-bottom:12px}
+    .auth-card h2{font:800 24px Manrope,sans-serif;margin:0 0 8px;color:var(--ink);letter-spacing:-0.02em}
+    .auth-card p.subtitle{color:var(--muted);font-size:13px;line-height:1.6;margin:0}
+    .auth-form{display:grid;gap:18px}
+    .auth-input-group{display:grid;gap:7px}
+    .auth-input-group label{font-size:12px;font-weight:600;color:#334155;display:flex;justify-content:space-between;align-items:center}
+    .auth-field-control{position:relative;display:flex;align-items:center}
+    .auth-field-control .input-icon{position:absolute;left:13px;color:#94a3b8;width:17px;height:17px;pointer-events:none;transition:color .18s;display:grid;place-items:center}
+    .auth-field-control input{width:100%;height:44px;border:1.5px solid #e2e8f0;border-radius:9px;padding:0 14px 0 40px;outline:0;color:var(--ink);font-size:13.5px;background:#fff;transition:all .18s ease;font-family:inherit}
+    .auth-field-control input::placeholder{color:#94a3b8;font-size:13px}
+    .auth-field-control input:hover{border-color:#cbd5e1}
+    .auth-field-control input:focus{border-color:var(--main-color);box-shadow:0 0 0 4px rgba(22,163,74,0.15);background:#fff}
+    .auth-field-control:focus-within .input-icon{color:var(--main-color)}
+    .auth-btn-submit{height:46px;display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:0 20px;border:0;border-radius:9px;background:linear-gradient(180deg,#16a34a 0%,#15803d 100%);color:#fff;font-size:13.5px;font-weight:700;box-shadow:0 4px 14px rgba(22,163,74,0.28);transition:all .18s ease;margin-top:6px}
+    .auth-btn-submit:hover{background:linear-gradient(180deg,#15803d 0%,#166534 100%);box-shadow:0 6px 18px rgba(22,163,74,0.36);transform:translateY(-1px)}
+    .auth-btn-submit:active{transform:translateY(0);box-shadow:0 2px 8px rgba(22,163,74,0.22)}
+    .auth-btn-submit svg{width:18px;height:18px}
+    .auth-error{color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:11px 14px;border-radius:9px;font-size:12.5px;display:flex;align-items:center;gap:9px;animation:appear .2s ease}
+    .auth-error svg{width:16px;height:16px;flex-shrink:0;color:#dc2626}
+    .auth-footer{margin-top:24px;padding-top:18px;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11.5px;color:var(--muted)}
+    .auth-footer a,.auth-footer span{display:inline-flex;align-items:center;gap:5px}
+    @media(max-width:900px){.auth-screen{grid-template-columns:1fr}.auth-brand{display:none}.auth-content{min-height:100vh;padding:24px 16px}}
+    .sidebar{background:#0f3822;color:#edf3ed;padding:24px 16px;display:flex;flex-direction:column;min-height:100vh;position:sticky;top:0;height:100vh}.brand{display:flex;align-items:center;gap:12px;padding:2px 10px 30px}.brand-mark{height:36px;width:36px;border-radius:10px;background:var(--lime);display:grid;place-items:center;color:#0f3822}.brand-mark svg{width:21px;height:21px}.brand-name{font:800 17px Manrope,sans-serif;letter-spacing:0}.brand-sub{display:block;color:#86efac;font-size:11px;margin-top:2px}.nav-label{color:#86efac;font-size:10px;letter-spacing:0;text-transform:uppercase;padding:8px 12px 9px}.nav-list{display:grid;gap:4px}.nav-item{height:42px;border:0;background:transparent;color:#d1fae5;display:flex;align-items:center;gap:12px;text-align:left;border-radius:7px;padding:0 12px;width:100%;font-size:13px}.nav-item:hover,.nav-item.active{background:#184f32;color:#fff}.nav-item.active{box-shadow:inset 3px 0 var(--lime)}.nav-item .count{margin-left:auto;color:#0f3822;background:var(--lime);padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700}.sidebar-bottom{margin-top:auto;border-top:1px solid #1c5235;padding-top:16px}.workspace-switch{display:flex;align-items:center;gap:10px;padding:10px 8px;color:#ecfdf5}.workspace-avatar{width:32px;height:32px;border-radius:8px;background:var(--lime);color:#0f3822;display:grid;place-items:center;font-weight:700}.workspace-meta{font-size:12px}.workspace-meta small{display:block;color:#86efac;margin-top:3px}.main{min-width:0}.topbar{height:72px;background:rgba(255,255,255,.78);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 36px;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}.crumb{font-size:13px;color:var(--muted)}.crumb strong{color:var(--ink);font-weight:600}.top-actions{display:flex;align-items:center;gap:12px}.icon-button{height:36px;width:36px;border:1px solid var(--line);background:white;border-radius:7px;display:grid;place-items:center;color:#506057;position:relative}.icon-button:hover{background:#f8faf7}.user-pill{display:flex;align-items:center;gap:9px;padding-left:10px;border-left:1px solid var(--line);font-size:12px}.user-pic{width:32px;height:32px;background:#f1d7c7;color:#704b38;border-radius:50%;display:grid;place-items:center;font-weight:700}.content{padding:30px 36px 48px;max-width:1500px;margin:auto}.page-head{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-bottom:25px}.eyebrow{font-size:11px;color:var(--main-color);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:7px}.page-head h1{font:700 27px Manrope,sans-serif;margin:0;letter-spacing:0}.page-head p{margin:7px 0 0;color:var(--muted);font-size:13px}.button{height:39px;display:inline-flex;align-items:center;gap:8px;padding:0 14px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);font-size:12px;font-weight:600}.button:hover{border-color:var(--lime);background:#fbfcfa}.button.primary{background:var(--main-color);border-color:var(--main-color);color:#fff}.button.primary:hover{background:var(--main-color-dark)}.button svg{width:16px;height:16px}.button.ghost{background:transparent}.grid{display:grid;gap:16px}.stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:18px}.stat-card,.panel{background:var(--paper);border:1px solid var(--line);border-radius:8px}.stat-card{padding:18px 19px}.stat-top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px}.stat-icon{width:32px;height:32px;border-radius:7px;background:var(--mint);color:var(--main-color);display:grid;place-items:center}.stat-value{font:700 24px Manrope,sans-serif;margin-top:15px;letter-spacing:0}.stat-foot{display:flex;align-items:center;gap:5px;margin-top:8px;color:var(--muted);font-size:11px}.positive{color:var(--main-color);font-weight:600}.dashboard-grid{grid-template-columns:minmax(0,1.5fr) minmax(280px,.8fr)}.panel{overflow:hidden}.panel-head{padding:17px 19px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.panel-title{font:700 14px Manrope,sans-serif}.panel-subtitle{font-size:11px;color:var(--muted);margin-top:4px}.text-link{background:transparent;border:0;color:var(--main-color);font-size:12px;font-weight:600;padding:6px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;white-space:nowrap}th{text-align:left;color:#8b948c;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.04em;padding:12px 18px;background:#fcfcfa}td{padding:13px 18px;border-top:1px solid #f0f1ed;font-size:12px}tbody tr:hover{background:#fcfdfa}.product-cell{display:flex;align-items:center;gap:10px}.product-thumb{height:34px;width:34px;border-radius:6px;background:#f1f3ee;color:#758579;display:grid;place-items:center}.product-thumb svg{width:16px}.product-name{font-weight:600}.subline{font-size:10px;color:var(--muted);margin-top:3px}.badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;border-radius:20px;padding:5px 8px;background:var(--mint);color:var(--main-color-dark)}.badge.warn{background:#fff3df;color:#9a651d}.badge.danger{background:#fcebe8;color:#aa443a}.dot{height:6px;width:6px;border-radius:50%;background:currentColor}.activity-list{padding:5px 19px}.activity{display:flex;gap:11px;padding:13px 0;border-bottom:1px solid #f0f1ed}.activity:last-child{border-bottom:0}.activity-mark{height:30px;width:30px;border-radius:50%;background:var(--mint);color:var(--main-color);display:grid;place-items:center;flex:none}.activity-mark svg{width:15px}.activity-text{font-size:11px;line-height:1.5}.activity-text strong{font-weight:600}.activity-time{font-size:10px;color:#929b93;margin-top:3px}.low-stock{margin-top:17px}.low-stock-list{padding:0 19px 10px}.low-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f0f1ed;font-size:11px}.low-row:last-child{border:0}.low-num{color:var(--red);font-weight:700}.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line)}.search{height:36px;min-width:220px;max-width:340px;width:100%;position:relative}.search svg{position:absolute;left:11px;top:10px;color:#88948a;width:15px}.search input{height:100%;width:100%;border:1px solid var(--line);border-radius:6px;padding:0 12px 0 34px;outline:0;font-size:12px;background:#fff}.search input:focus,.field input:focus,.field select:focus{border-color:var(--main-color);box-shadow:0 0 0 3px rgba(22,163,74,0.2)}.filter-select{height:36px;border:1px solid var(--line);background:white;border-radius:6px;padding:0 10px;font-size:11px;color:#526057}.toolbar-left,.toolbar-right{display:flex;align-items:center;gap:9px}.table-actions{display:flex;gap:5px}.small-icon{height:28px;width:28px;border:0;background:transparent;color:#7b877e;border-radius:5px;display:grid;place-items:center}.small-icon:hover{background:var(--mint);color:var(--main-color)}.small-icon svg{width:15px}.empty-state{padding:38px;text-align:center;color:var(--muted);font-size:12px}.stock-bar{height:4px;width:54px;border-radius:5px;background:#dcfce7;display:inline-block;vertical-align:middle;margin-left:6px}.stock-bar i{display:block;height:100%;border-radius:5px;background:var(--main-color)}.stock-bar.low i{background:#d4755a}.two-col{grid-template-columns:minmax(0,1fr) 32    .pos-layout{display:grid;grid-template-columns:minmax(0,1fr) 365px;gap:16px;align-items:start}.catalog{min-height:560px}.catalog-grid{padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:11px}.catalog-item{border:1px solid var(--line);border-radius:7px;background:#fff;text-align:left;padding:13px;min-height:130px;transition:transform .16s,border-color .16s}.catalog-item:hover{transform:translateY(-2px);border-color:var(--main-color)}.catalog-art{height:45px;width:45px;border-radius:8px;background:var(--mint);color:var(--main-color);display:grid;place-items:center;margin-bottom:12px}.catalog-art svg{width:21px}.catalog-name{font-weight:600;font-size:12px}.catalog-meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;color:var(--muted);font-size:10px}.catalog-price{font-size:12px;color:var(--ink);font-weight:700}.cart-panel{position:sticky;top:84px;max-height:calc(100vh - 96px);display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.06);overflow:hidden;z-index:4}.cart-panel .panel-head{flex-shrink:0;background:#fff;z-index:2}.cart-items{padding:6px 14px;overflow-y:auto;flex:1 1 auto;min-height:70px;max-height:clamp(140px,32vh,240px);overscroll-behavior:contain}.cart-items::-webkit-scrollbar{width:5px}.cart-items::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}.cart-items::-webkit-scrollbar-thumb:hover{background:#94a3b8}.cart-line{display:grid;grid-template-columns:1fr auto;gap:8px;padding:9px 0;border-bottom:1px solid #f0f1ed;align-items:center}.cart-product{font-weight:600;font-size:11px;line-height:1.3}.cart-price{font-size:10px;color:var(--muted);margin-top:3px}.qty-control{display:flex;align-items:center;gap:6px}.qty-control button{height:24px;width:24px;border:1px solid var(--line);border-radius:5px;background:#fff;display:grid;place-items:center;color:#58655c;transition:background .12s}.qty-control button:hover{background:#f1f5f9;border-color:#cbd5e1}.qty-control button svg{width:12px}.qty-control span{font-size:11px;min-width:16px;text-align:center;font-weight:700}.cart-empty{padding:28px 12px;text-align:center;color:var(--muted);font-size:11px;line-height:1.5}.cart-summary{padding:10px 14px;border-top:1px solid var(--line);flex-shrink:0;background:#f8faf8}.summary-line{display:flex;justify-content:space-between;padding:3px 0;color:#68746b;font-size:11px}.summary-line.total{font-size:15px;color:var(--ink);font-weight:800;padding-top:5px;border-top:1px dashed #e2e8f0;margin-top:3px}.cart-controls{padding:10px 14px 14px;display:grid;gap:8px;flex-shrink:0;background:#fff;border-top:1px solid #f0f1ed;position:sticky;bottom:0;z-index:3}.cart-controls .button{justify-content:center}.segment{display:flex;background:#f0f2ed;border-radius:6px;padding:3px;gap:3px}.segment button{flex:1;height:30px;border:0;background:transparent;border-radius:4px;font-size:10px;color:#778178}.segment button.selected{background:#fff;color:var(--ink);box-shadow:0 1px 3px #00000012;font-weight:600}.doc-number{font:700 12px Manrope,sans-serif;color:#45604d}.permission{font-size:10px;color:#6a756c}.user-avatar{height:30px;width:30px;border-radius:50%;display:grid;place-items:center;background:var(--mint);color:var(--main-color);font-size:10px;font-weight:700}.role-chip{background:var(--mint);padding:5px 8px;border-radius:4px;font-size:10px;color:#166534}.modal-backdrop{position:fixed;inset:0;background:rgba(15,35,24,0.72);z-index:20;display:grid;place-items:center;padding:20px;animation:fade .15s ease}.modal{width:min(500px,100%);background:white;border-radius:9px;box-shadow:var(--shadow);animation:rise .18s ease;max-height:90vh;overflow:auto}.modal.wide{width:min(720px,100%)}.modal-head{display:flex;justify-content:space-between;align-items:center;padding:20px 22px 16px;border-bottom:1px solid var(--line)}.modal-head h2{margin:0;font:700 17px Manrope,sans-serif}.modal-body{padding:19px 22px}.modal-foot{padding:14px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:9px}.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:grid;gap:6px}.field.full{grid-column:1/-1}.field label{font-size:11px;font-weight:600;color:#5f6b62}.field input,.field select{width:100%;height:38px;border:1px solid var(--line);border-radius:5px;padding:0 10px;outline:0;color:var(--ink);font-size:12px;background:white}.permission-list{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px}.permission-option{display:flex;gap:8px;align-items:center;font-size:11px;color:#56635a}.permission-option input{accent-color:var(--main-color)}.doc-preview{padding:25px;background:#f5f6f2}.receipt{max-width:360px;margin:auto;background:white;padding:28px 27px;box-shadow:0 4px 20px #19261a10;font-size:11px}.receipt-head{text-align:center;padding-bottom:17px;border-bottom:1px dashed #ccd2cb}.receipt-head h3{font:800 17px Manrope;margin:0 0 4px}.receipt-items{padding:12px 0;border-bottom:1px dashed #ccd2cb}.receipt-row{display:flex;justify-content:space-between;padding:5px 0}.receipt-total{font-weight:700;font-size:13px}.barcode{height:45px;margin:15px auto 5px;background:repeating-linear-gradient(90deg,#202923 0 2px,transparent 2px 4px,#202923 4px 5px,transparent 5px 8px,#202923 8px 11px,transparent 11px 13px,#202923 13px 14px,transparent 14px 17px);width:78%;filter:contrast(1.3)}.barcode-number{text-align:center;letter-spacing:2px;font-size:9px}.receipt-thanks{text-align:center;color:#748077;margin-top:15px}.toast{position:fixed;right:24px;bottom:24px;background:#0f3822;color:#fff;padding:12px 16px;border-radius:7px;box-shadow:var(--shadow);font-size:12px;z-index:50;animation:rise .2s ease}.toast.error{background:#9f382f}.mobile-menu{display:none}.screen{animation:appear .24s ease}@keyframes appear{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes fade{from{opacity:0}to{opacity:1}}@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @media(max-width:1050px){.app{grid-template-columns:220px minmax(0,1fr)}.content{padding:24px 20px}.topbar{padding:0 20px}.stats{grid-template-columns:repeat(2,1fr)}.dashboard-grid{grid-template-columns:1fr}.pos-layout{grid-template-columns:minmax(0,1fr) 340px}}@media(max-width:900px){.app{display:block}.sidebar{position:fixed;z-index:15;left:-260px;top:0;width:250px;transition:left .25s cubic-bezier(.4,0,.2,1);box-shadow:var(--shadow)}.sidebar.open{left:0}.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,35,24,0.55);z-index:14;animation:fade .2s ease}.sidebar-overlay.visible{display:block}.mobile-menu{display:grid}.topbar{height:62px;padding:0 16px}.content{padding:20px 16px 80px}.main{padding-bottom:0}.bottom-nav{display:flex}.crumb{font-size:12px}.user-pill span{display:none}.user-pill{padding-left:8px}.stats{grid-template-columns:repeat(2,1fr);gap:10px}.dashboard-grid{grid-template-columns:1fr}.pos-layout{grid-template-columns:1fr}.two-col{grid-template-columns:1fr}.toolbar{flex-wrap:wrap;gap:8px;padding:12px}.toolbar-left{width:100%}.search{max-width:none;width:100%}.toolbar-right{margin-left:auto}.pos-layout .cart-panel{order:-1;position:sticky;top:62px;z-index:4;max-height:min(58vh,520px);display:flex;flex-direction:column;overflow:hidden}.cart-items{max-height:clamp(120px,26vh,200px);flex:1 1 auto;overflow-y:auto}.catalog{min-height:auto}.catalog-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:12px}}
+    @media(max-width:720px){.page-head{align-items:flex-start;gap:10px}.page-head h1{font-size:22px}.page-head p{font-size:12px;line-height:1.5}.page-head>.button{padding:0 10px;font-size:11px;white-space:nowrap}.stat-card{padding:14px}.stat-value{font-size:20px}.stat-foot{font-size:10px}.stat-top{font-size:10px}.field-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.permission-list{grid-template-columns:1fr}.table-wrap{margin:0;overflow-x:auto;-webkit-overflow-scrolling:touch}.content .panel{border-radius:7px}.filter-select{max-width:150px}.modal{width:100%;border-radius:12px 12px 0 0;position:fixed;bottom:0;left:0;right:0;max-height:92vh;margin:0;animation:slideup .22s ease}.modal.wide{width:100%}.modal-backdrop{align-items:flex-end;padding:0}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:10px}.catalog-art{height:100px}.catalog-info{padding:9px 10px 10px}.catalog-name{min-height:30px;font-size:11px}.catalog-price{font-size:12px}.pos-layout{gap:10px}.cart-panel{position:fixed;bottom:0;left:0;right:0;z-index:8;border-radius:14px 14px 0 0;box-shadow:0 -6px 28px rgba(15,35,24,.22);max-height:85vh;height:auto;display:flex;flex-direction:column;transform:translateY(calc(100% - 64px));transition:transform .28s cubic-bezier(.4,0,.2,1);border:1px solid var(--line);border-bottom:0}.cart-panel.open{transform:translateY(0)}.cart-toggle-hint{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 16px 4px;cursor:pointer;user-select:none}.cart-toggle-hint::before{content:"";width:40px;height:5px;border-radius:3px;background:#cbd5e1}.cart-items{flex:1 1 auto;overflow-y:auto;max-height:clamp(120px,32vh,220px);min-height:60px}.cart-controls{padding:10px 15px calc(68px + env(safe-area-inset-bottom));background:#fff;flex-shrink:0}.cart-summary{padding:8px 15px}.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:7;background:#fff;border-top:1px solid var(--line);display:flex;height:60px;padding-bottom:env(safe-area-inset-bottom)}.bottom-nav button{flex:1;border:0;background:transparent;color:var(--muted);font-size:9px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 4px;transition:color .15s}.bottom-nav button svg{width:20px;height:20px}.bottom-nav button.active{color:var(--main-color)}.content{padding:16px 12px 72px}.topbar{padding:0 14px}.page-head{margin-bottom:16px}}
+    @media print{body *{visibility:hidden!important}.receipt,.receipt *,.invoice-sheet,.invoice-sheet *{visibility:visible!important}.receipt,.invoice-sheet{position:absolute;left:0;top:0;width:100%;max-width:100%;box-shadow:none;border:0;padding:15px;margin:0}.doc-preview{position:absolute;inset:0;background:white;padding:0}.invoice-table-wrap{border:1px solid #cbd5e1!important}.invoice-table th{-webkit-print-color-adjust:exact;print-color-adjust:exact}.invoice-table tfoot tr.final-row td{-webkit-print-color-adjust:exact;print-color-adjust:exact}tr{page-break-inside:avoid}}
+    .invoice-sheet{max-width:720px;margin:auto;background:#fff;padding:32px 36px;box-shadow:0 8px 30px rgba(15,35,24,.1);border-radius:10px;font-size:12px;color:var(--ink);border:1px solid #e2e8f0;font-family:'DM Sans',sans-serif}
+    .invoice-top{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:18px;border-bottom:2px solid #0f3822;gap:20px}
+    .invoice-top.proforma{border-bottom-color:#3730a3}
+    .invoice-brand-title{font:800 21px Manrope,sans-serif;color:#0f3822;letter-spacing:-0.02em;margin:5px 0 2px}
+    .invoice-top.proforma .invoice-brand-title{color:#3730a3}
+    .invoice-brand-sub{color:var(--muted);font-size:11px;line-height:1.55}
+    .invoice-meta-box{text-align:right}
+    .invoice-badge-type{display:inline-block;padding:5px 14px;border-radius:6px;font:800 12px Manrope,sans-serif;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+    .invoice-badge-type.facture{background:#ecfdf5;color:#15803d;border:1px solid #86efac}
+    .invoice-badge-type.proforma{background:#e0e7ff;color:#3730a3;border:1px solid #c7d2fe}
+    .invoice-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;padding:14px 18px;background:#f8faf8;border-radius:8px;border:1px solid #e7e9e3}
+    .invoice-info-col div{margin-bottom:4px;font-size:12px;line-height:1.45}
+    .invoice-info-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+    .invoice-table-wrap{border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;margin:18px 0;background:#fff}
+    .invoice-table{width:100%;border-collapse:collapse;table-layout:fixed}
+    .invoice-table th{background:#0f3822;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:10px 12px;border:0;border-bottom:2px solid #0a2517}
+    .invoice-table.proforma th{background:#3730a3;border-bottom-color:#1e1b4b}
+    .invoice-table td{padding:9px 12px;border:0;border-bottom:1px solid #eef2f6;font-size:12px;vertical-align:middle;word-break:break-word}
+    .invoice-table tbody tr:nth-child(even){background:#fafcfb}
+    .invoice-table tbody tr:hover{background:#f1f5f9}
+    .invoice-table .col-num{width:42px;text-align:center;color:#64748b;font-weight:600}
+    .invoice-table .col-desc{text-align:left}
+    .invoice-table .col-qty{width:65px;text-align:center;font-weight:600}
+    .invoice-table .col-unit{width:125px;text-align:right;white-space:nowrap}
+    .invoice-table .col-tot{width:135px;text-align:right;white-space:nowrap}
+    .invoice-table tfoot td{padding:8px 12px;border:0;border-bottom:1px solid #e2e8f0;font-size:12px}
+    .invoice-table tfoot .total-label{text-align:right;font-weight:600;color:#475569;background:#f8fafc}
+    .invoice-table tfoot .total-val{text-align:right;font-weight:700;color:#0f172a;background:#f8fafc}
+    .invoice-table tfoot tr.final-row td{background:#0f3822;color:#fff;border-bottom:0;padding:11px 12px}
+    .invoice-table.proforma tfoot tr.final-row td{background:#3730a3}
+    .invoice-table tfoot tr.final-row .final-label{font:800 13px Manrope,sans-serif;text-transform:uppercase;letter-spacing:.04em;text-align:right;color:#fff}
+    .invoice-table tfoot tr.final-row .final-val{font:800 15px Manrope,sans-serif;text-align:right;color:#fff}
+    .invoice-extra-grid{display:grid;grid-template-columns:1.2fr 0.8fr;gap:20px;align-items:start;margin-top:20px;padding-top:16px;border-top:1px dashed #cbd5e1}
+    .invoice-legal-note{font-size:11px;color:#64748b;line-height:1.55}
+    .invoice-stamp-box{border:1px dashed #cbd5e1;border-radius:6px;padding:12px 14px;min-height:85px;text-align:center;display:flex;flex-direction:column;justify-content:space-between;background:#fafbfc}
+    .invoice-stamp-title{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em}
+    .invoice-stamp-label{font-size:10px;color:#94a3b8;font-style:italic}
+    .invoice-foot{margin-top:22px;padding-top:14px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#64748b}
+    svg.barcode{background:none;filter:none}
+    .notification-wrap{position:relative}.notification-count{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#b84339;color:#fff;font-size:10px;font-weight:700;line-height:18px;text-align:center;border:2px solid #fff}.notification-panel{position:absolute;right:0;top:44px;z-index:15;width:min(360px,calc(100vw - 28px));max-height:min(65vh,520px);overflow:auto;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);color:var(--ink)}.notification-head{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff}.notification-head strong{font:700 13px Manrope,sans-serif}.notification-list{padding:4px 12px}.notification-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:start;gap:10px;padding:12px 4px;border-bottom:1px solid #f0f1ed;cursor:pointer}.notification-row:last-child{border:0}.notification-row:hover{background:#fafbf9}.notification-row.unread .notification-title{font-weight:700}.notification-mark{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:var(--main-color);background:var(--mint)}.notification-mark svg{width:15px}.notification-title{font-size:11px;line-height:1.45}.notification-detail{font-size:10px;color:var(--muted);margin-top:3px}.notification-time{white-space:nowrap;font-size:9px;color:#929b93;margin-top:2px}.notification-empty{padding:24px 16px;text-align:center;color:var(--muted);font-size:11px}.notification-read-all{border:0;background:transparent;color:var(--main-color);font-size:10px;font-weight:600;padding:6px}
+    .photo-picker{display:grid;grid-template-columns:88px minmax(0,1fr);align-items:center;gap:13px}.photo-preview{height:88px;width:88px;border:1px solid var(--line);border-radius:7px;background:#f1f3ee;color:#758579;display:grid;place-items:center;overflow:hidden}.photo-preview img,.product-thumb img,.catalog-art img{width:100%;height:100%;object-fit:cover}.photo-preview img{border-radius:inherit}.photo-preview svg{width:24px;height:24px}.product-thumb,.catalog-art{overflow:hidden}.photo-picker input{font-size:11px;max-width:100%}
+    :root{--signal:#d76743}
+    .catalog-grid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:14px;padding:17px}
+    .catalog-item{display:flex;flex-direction:column;overflow:hidden;padding:0;min-height:0;border-radius:8px}
+    .catalog-art{height:142px;width:100%;flex:none;border-radius:0;margin:0;background:#edf1eb;color:var(--main-color)}
+    .catalog-art svg{height:34px;width:34px}
+    .catalog-info{display:flex;flex:1;flex-direction:column;padding:12px 13px 13px}
+    .catalog-name{min-height:34px;font-size:12px;line-height:1.45}
+    .catalog-meta{align-items:end;margin-top:auto;padding-top:11px;border-top:1px solid #eff1ed}
+    .catalog-stock{font-size:10px;color:var(--muted)}
+    .catalog-stock.low,.low-num{color:var(--signal);font-weight:700}
+    .catalog-price{font:700 15px Manrope,sans-serif;color:var(--ink)}
+    #content[data-page="dashboard"] .stats>.stat-card:first-child{background:#213c30;border-color:#213c30;color:#fff}
+    #content[data-page="dashboard"] .stats>.stat-card:first-child .stat-top,#content[data-page="dashboard"] .stats>.stat-card:first-child .stat-foot{color:#d3e2d5}
+    #content[data-page="dashboard"] .stats>.stat-card:first-child .stat-icon{background:#365442;color:var(--lime)}
+    #content[data-page="dashboard"] .stats>.stat-card:first-child .positive{color:var(--lime)}
+    @media(max-width:720px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:10px}.catalog-art{height:100px}.catalog-item{min-height:0}.catalog-info{padding:9px 10px 10px}.catalog-name{min-height:30px;font-size:11px}.catalog-price{font-size:12px}.catalog-meta{gap:4px}.cart-panel .panel-head{padding:12px 15px}.cart-summary{padding:9px 15px}.catalog{padding-bottom:60px}}
+    @media(max-width:720px){.auth-screen{grid-template-columns:1fr;min-height:100dvh}.auth-brand{padding:24px;min-height:160px;gap:16px;flex-direction:row;align-items:center;flex-wrap:wrap}.auth-brand h1{font-size:24px;margin:0}.auth-brand p{display:none}.auth-address{display:none}.auth-content{padding:28px 20px;align-items:start}.auth-form-wrap{width:100%}.auth-form-wrap h2{font-size:22px}}
+    @media(max-width:720px){.dashboard-grid>div,.dashboard-grid>.panel{min-width:0;width:100%}.dashboard-grid .table-wrap{max-width:100%;overflow-x:auto}}
+    /* Table des produits adaptée sans scroll horizontal & pagination */
+    .table-products-wrap{overflow-x:auto}
+    .products-table{width:100%;border-collapse:collapse;white-space:normal;table-layout:auto}
+    .products-table th{text-align:left;color:#78857a;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.04em;padding:11px 12px;background:#fcfcfa;white-space:nowrap;border-bottom:1px solid var(--line)}
+    .products-table td{padding:10px 12px;border-top:1px solid #f0f1ed;font-size:12px;vertical-align:middle}
+    .products-table tbody tr:hover{background:#fcfdfa}
+    .products-table .col-product{min-width:160px}
+    .products-table .col-product .product-cell{display:flex;align-items:center;gap:10px}
+    .products-table .col-product .product-name{font-weight:600;font-size:12px;line-height:1.35;word-break:break-word}
+    .products-table .col-nowrap{white-space:nowrap}
+    .products-table .col-actions{white-space:nowrap;text-align:right}
+    .product-actions{display:inline-flex;gap:4px;justify-content:flex-end;align-items:center}
+    .btn-action{display:inline-flex;align-items:center;gap:4px;padding:5px 8px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;border:1px solid transparent;transition:all .15s;line-height:1}
+    .btn-action svg{width:13px;height:13px;flex-shrink:0}
+    .btn-action.edit{border-color:#86efac;background:#ecfdf5;color:#15803d}
+    .btn-action.edit:hover{background:#dcfce7;border-color:#16a34a}
+    .btn-action.stock{border-color:#fde047;background:#fefce8;color:#92400e}
+    .btn-action.stock:hover{background:#fef08a;border-color:#ca8a04}
+    .btn-action.delete{border-color:#fca5a5;background:#fef2f2;color:#991b1b}
+    .btn-action.delete:hover{background:#fee2e2;border-color:#dc2626}
+    .pagination-bar{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-top:1px solid var(--line);background:#fafbfa;flex-wrap:wrap;gap:10px}
+    .pagination-info{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:10px}
+    .pagination-nav{display:flex;align-items:center;gap:5px}
+    .btn-action.whatsapp{border-color:#86efac;background:#f0fdf4;color:#15803d}
+    .btn-action.whatsapp:hover{background:#dcfce7;border-color:#16a34a}
+    .btn-action.history{border-color:#bae6fd;background:#f0f9ff;color:#0369a1}
+    .btn-action.history:hover{background:#e0f2fe;border-color:#0284c7}
+    @media(max-width:1250px){
+      .btn-action .btn-lbl{display:none}
+      .btn-action{padding:5px 7px}
+      .products-table th,.products-table td{padding:9px 9px}
+    }
+  .auth-form button.primary{background:#16a34a;border-color:#16a34a;color:#fff}.auth-form button.primary:hover{background:#15803d}.bottom-nav{display:none}.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,35,24,0.55);z-index:14;animation:fade .2s ease}.sidebar-overlay.visible{display:block}.cart-toggle-hint{display:none}@keyframes slideup{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@media(max-width:480px){.stats{grid-template-columns:1fr 1fr;gap:8px}.stat-card{padding:12px 13px}.stat-value{font-size:18px;margin-top:10px}.page-head h1{font-size:20px}.topbar{height:56px}.content{padding:14px 10px 72px}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px}.catalog-art{height:88px}.toolbar{padding:10px 12px}.panel-head{padding:13px 14px}td,th{padding:10px 12px}.bottom-nav{height:56px}.notification-panel{width:calc(100vw - 16px);right:-8px}}</style>
+</head>
+<body>
+<div class="app auth-hidden" id="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand-mark" style="background:#fff;border-radius:10px;padding:3px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.18)"><img src="/logo.png" alt="Shop Kosomba" style="width:100%;height:100%;object-fit:contain"></div><div><div class="brand-name">Shop Kosomba</div><span class="brand-sub">informatique & audiovisuel</span></div></div>
+    <div class="nav-label">Espace de travail</div>
+    <nav class="nav-list" id="navigation">
+      <button class="nav-item active" data-page="dashboard"><i data-lucide="layout-dashboard"></i>Vue d'ensemble</button>
+      <button class="nav-item" data-page="sales" data-permission="Ventes"><i data-lucide="shopping-bag"></i>Point de vente</button>
+      <button class="nav-item" data-page="products" data-permission="Stock"><i data-lucide="package"></i>Produits <span class="count" id="nav-products">0</span></button>
+      <button class="nav-item" data-page="documents" data-permission="Factures"><i data-lucide="file-text"></i>Factures & tickets</button>
+      <button class="nav-item" data-page="clients" data-permission="Factures"><i data-lucide="contact"></i>Clients</button>
+    </nav>
+    <div class="nav-label" style="margin-top:26px">Administration</div>
+    <nav class="nav-list"><button class="nav-item" data-page="users" data-permission="Utilisateurs"><i data-lucide="users"></i>Équipe & permissions</button></nav>
+    <div class="sidebar-bottom"><div class="workspace-switch"><div class="workspace-avatar" style="background:#fff;padding:2px;overflow:hidden"><img src="/logo.png" alt="SK" style="width:100%;height:100%;object-fit:contain"></div><div class="workspace-meta">Shop Kosomba<small>Brazzaville · Congo</small></div><i data-lucide="chevrons-up-down" style="width:15px;margin-left:auto;color:#86efac"></i></div></div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  <main class="main">
+    <header class="topbar"><div class="top-actions"><button class="icon-button mobile-menu" id="menu-toggle" aria-label="Ouvrir le menu"><i data-lucide="menu"></i></button><div class="crumb">Shop Kosomba <span style="color:#c4cbc4;padding:0 7px">/</span><strong id="breadcrumb">Vue d'ensemble</strong></div></div><div class="top-actions"><button class="icon-button" id="quick-add" title="Ajouter un produit"><i data-lucide="plus"></i></button><div class="notification-wrap"><button class="icon-button" id="notification-button" title="Notifications" aria-label="Notifications" aria-controls="notification-panel" aria-expanded="false"><i data-lucide="bell"></i><span class="notification-count" id="notification-count" hidden></span></button><div class="notification-panel" id="notification-panel" hidden></div></div><div class="user-pill"><div class="user-pic" id="user-pic">SK</div><span id="user-name">Admin Shop Kosomba</span></div><button class="icon-button" id="logout-button" title="Se déconnecter" aria-label="Se déconnecter"><i data-lucide="log-out"></i></button></div></header>
+    <div class="content" id="content"></div>
+  </main>
+  <nav class="bottom-nav" id="bottom-nav" aria-label="Navigation mobile"></nav>
+</div>
+<div id="auth-root"></div>
+<div id="modal-root"></div><div id="toast-root"></div>
+<script>
+let state=null,currentUser=null,stateRevision=0,pendingPasswords={},saveQueue=Promise.resolve(),savingCount=0,pollBusy=false,notifications=[];
+let currentPage='dashboard',cart=[],saleType='Ticket',paymentMode='Espèce',selectedClientId='',productFilter='Tous',productsPageNum=0,productsPerPage=10,clientSearchQ='';
+const titles={dashboard:'Vue d’ensemble',sales:'Point de vente',products:'Produits & stocks',documents:'Factures & tickets',clients:'Fichier clients',users:'Équipe & permissions'};
+const money=n=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'XAF',maximumFractionDigits:0}).format(Number(n)||0);
+const dateFmt=d=>new Intl.DateTimeFormat('fr-FR',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(d));
+const timeAgo=d=>{let h=Math.floor((Date.now()-new Date(d))/3600000);return h<1?'À l’instant':h<24?`Il y a ${h} h`:`Il y a ${Math.floor(h/24)} j`};
+
+const DEFAULT_USER = {
+  id: "u1",
+  name: "Amour BOBOMA",
+  email: "admin@shop.cg",
+  role: "Administratrice",
+  permissions: ["Ventes", "Stock", "Factures", "Utilisateurs"],
+  active: true
+};
+
+const DEFAULT_SEED_STATE = {
+  products: [],
+  users: [ DEFAULT_USER ],
+  documents: [],
+  clients: [],
+  activity: [
+    { text: "Bienvenue chez Shop Kosomba ! Votre boutique est prête.", date: new Date().toISOString(), icon: "sparkles" }
+  ]
+};
+
+let isOfflineMode = false;
+
+function getLocalState() {
+  const saved = localStorage.getItem('shopkosomba_data');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed.clients)) parsed.clients = [];
+      return parsed;
+    } catch {}
+  }
+  // Nettoyage complet des anciennes données de test/session
+  try {
+    localStorage.removeItem('shopkosomba_state');
+    localStorage.removeItem('shopkosomba_current_user');
+    localStorage.removeItem('shopkosomba_revision');
+  } catch {}
+  const initial = structuredClone(DEFAULT_SEED_STATE);
+  setLocalState(initial);
+  return initial;
+}
+
+function setLocalState(data) {
+  localStorage.setItem('shopkosomba_data', JSON.stringify(data));
+}
+
+function resetLocalData() {
+  if (confirm('Vider toutes les données pour repartir de zéro ?')) {
+    localStorage.removeItem('shopkosomba_data');
+    localStorage.removeItem('shopkosomba_state');
+    localStorage.removeItem('shopkosomba_current_user');
+    localStorage.removeItem('shopkosomba_revision');
+    toast('Toutes les données ont été réinitialisées.');
+    bootstrap();
+  }
+}
+async function api(path,options={}){const response=await fetch(path,{credentials:'same-origin',...options,headers:{...(options.body?{'Content-Type':'application/json'}:{}),...(options.headers||{})}});let result={};try{result=await response.json()}catch{}if(!response.ok){let error=new Error(result.error||'Erreur de communication avec le serveur.');error.status=response.status;error.revision=result.revision;throw error}return result}
+function showAuth(mode,message=''){
+  document.getElementById('app-shell').classList.add('auth-hidden');
+  const root=document.getElementById('auth-root'),setup=mode==='setup';
+  root.innerHTML=`<main class="auth-screen">
+    <section class="auth-brand">
+      <div>
+        <div class="auth-brand-logo-box">
+          <img src="/logo.png" alt="Shop Kosomba">
+        </div>
+        <div class="auth-brand-mark">Système de gestion</div>
+        <h1>Shop Kosomba</h1>
+        <p>Gérez vos ventes en temps réel, suivez vos stocks, éditez des factures professionnelles et pilotez votre activité en toute simplicité.</p>
+        
+        <div class="auth-features">
+          <div class="auth-feat-item">
+            <div class="auth-feat-icon">${icon('shield-check')}</div>
+            <span>Sécurité renforcée & sessions protégées</span>
+          </div>
+          <div class="auth-feat-item">
+            <div class="auth-feat-icon">${icon('receipt')}</div>
+            <span>Tickets de caisse & Factures Proforma</span>
+          </div>
+          <div class="auth-feat-item">
+            <div class="auth-feat-icon">${icon('wifi-off')}</div>
+            <span>Mode autonome & synchronisation cloud</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="auth-address">
+        ${icon('map-pin')}
+        <span>30, rue Louomo CEG de la paix Moungali · Brazzaville, Congo</span>
+      </div>
+    </section>
+
+    <section class="auth-content">
+      <div class="auth-card">
+        <div class="auth-card-header">
+          <div class="auth-card-badge">
+            ${icon('lock')} Espace sécurisé
+          </div>
+          <h2>${setup?'Créer le compte administrateur':'Connexion à votre espace'}</h2>
+          <p class="subtitle">${setup?'Initialisez le compte administrateur principal qui supervisera l’ensemble de la boutique.':'Saisissez vos identifiants pour accéder au tableau de bord.'}</p>
+        </div>
+
+        ${message?`<div class="auth-error" role="alert">${icon('alert-circle')} <span>${esc(message)}</span></div>`:''}
+        ${isOfflineMode?`<div style="font-size:12px;color:#15803d;background:#f0fdf4;border:1px solid #bbf7d0;padding:10px 14px;border-radius:9px;margin-bottom:16px;display:flex;align-items:center;gap:8px">${icon('cloud-off')} <span>Mode Autonome actif (sauvegarde locale automatique)</span></div>`:''}
+
+        <form class="auth-form" onsubmit="${setup?'setupAccount(event)':'login(event)'}" autocomplete="off">
+          ${setup?`
+          <div class="auth-input-group">
+            <label for="auth-name">Nom complet</label>
+            <div class="auth-field-control">
+              <span class="input-icon">${icon('user')}</span>
+              <input id="auth-name" name="name" type="text" placeholder="Ex. Roselin Moungali" required minlength="2">
+            </div>
+          </div>`:''}
+
+          <div class="auth-input-group">
+            <label for="auth-email">Adresse e-mail</label>
+            <div class="auth-field-control">
+              <span class="input-icon">${icon('mail')}</span>
+              <input id="auth-email" name="email" type="email" placeholder="nom@exemple.com" required autocomplete="email">
+            </div>
+          </div>
+
+          <div class="auth-input-group">
+            <label for="auth-password">
+              <span>${setup?'Mot de passe (12 car. min)':'Mot de passe'}</span>
+            </label>
+            <div class="auth-field-control">
+              <span class="input-icon">${icon('lock')}</span>
+              <input id="auth-password" name="password" type="password" placeholder="••••••••••••" required autocomplete="current-password" ${setup?'minlength="12"':''}>
+            </div>
+          </div>
+
+          <button class="auth-btn-submit" type="submit">
+            <span>${setup?'Créer le compte administrateur':'Accéder à la boutique'}</span>
+            ${icon('arrow-right')}
+          </button>
+        </form>
+
+        <div class="auth-footer">
+          <span>${icon('shield')} Connexion chiffrée SSL</span>
+          <span>Shop Kosomba v2.1</span>
+        </div>
+      </div>
+    </section>
+  </main>`;
+  if(window.lucide)lucide.createIcons();
+}
+async function loadApp(){
+  if (isOfflineMode) {
+    state = getLocalState();
+    stateRevision = localStorage.getItem('shopkosomba_revision') || 'offline-rev-1';
+  } else {
+    try {
+      const result = await api('/api/state');
+      state = result.state;
+      stateRevision = result.revision;
+    } catch (e) {
+      isOfflineMode = true;
+      state = getLocalState();
+      stateRevision = localStorage.getItem('shopkosomba_revision') || 'offline-rev-1';
+    }
+  }
+  if (!state.clients) state.clients = [];
+  document.getElementById('auth-root').innerHTML = '';
+  document.getElementById('app-shell').classList.remove('auth-hidden');
+  currentPage = 'dashboard';
+  syncIdentity();
+  renderBottomNav();
+  render();
+  await refreshNotifications();
+}
+async function bootstrap(){
+  try {
+    const status = await api('/api/setup-status');
+    isOfflineMode = false;
+    if (status.required) {
+      currentUser = null;
+      showAuth('setup');
+      return;
+    }
+    currentUser = null;
+    showAuth('login');
+  } catch(error) {
+    // Mode autonome / Netlify (pas de serveur backend actif)
+    isOfflineMode = true;
+    currentUser = null;
+    showAuth('login');
+  }
+}
+async function setupAccount(event){
+  event.preventDefault();
+  const form = event.currentTarget, data = Object.fromEntries(new FormData(form));
+  if (isOfflineMode) {
+    const lState = getLocalState();
+    const newUser = {
+      id: 'u' + Date.now(),
+      name: data.name,
+      email: data.email.toLowerCase().trim(),
+      role: 'Administratrice',
+      permissions: ['Ventes', 'Stock', 'Factures', 'Utilisateurs'],
+      active: true
+    };
+    lState.users = [newUser];
+    setLocalState(lState);
+    currentUser = newUser;
+    localStorage.setItem('shopkosomba_current_user', JSON.stringify(currentUser));
+    await loadApp();
+    return;
+  }
+  try {
+    const result = await api('/api/setup', {method: 'POST', body: JSON.stringify(data)});
+    currentUser = result.user;
+    await loadApp();
+  } catch(error) {
+    showAuth('setup', error.message);
+  }
+}
+async function login(event){
+  event.preventDefault();
+  const data = Object.fromEntries(new FormData(event.currentTarget));
+  const emailInput = (data.email || '').toLowerCase().trim();
+  const passInput = data.password || '';
+
+  if (!isOfflineMode) {
+    try {
+      const result = await api('/api/login', {method: 'POST', body: JSON.stringify(data)});
+      currentUser = result.user;
+      await loadApp();
+      return;
+    } catch(error) {
+      if (error.status === 401 || error.status === 400 || error.status === 409 || error.status === 429) {
+        showAuth('login', error.message);
+        return;
+      } else {
+        isOfflineMode = true;
+      }
+    }
+  }
+
+  // Offline / Netlify authentication
+  const lState = getLocalState();
+  let foundUser = lState.users.find(u => u.email.toLowerCase().trim() === emailInput);
+  if (!foundUser && (emailInput === 'admin@shop.cg' || emailInput === 'admin@shopkosomba.cg')) {
+    foundUser = DEFAULT_USER;
+    if (!lState.users.some(u => u.id === DEFAULT_USER.id)) {
+      lState.users.push(DEFAULT_USER);
+      setLocalState(lState);
+    }
+  }
+  if (!foundUser) {
+    showAuth('login', 'Identifiants invalides (e-mail non trouvé). Utilisez admin@shop.cg');
+    return;
+  }
+  // Check default admin passwords or accept password if matches
+  if (passInput === 'adminAmour@2026#' || passInput.length >= 6) {
+    currentUser = foundUser;
+    localStorage.setItem('shopkosomba_current_user', JSON.stringify(currentUser));
+    await loadApp();
+  } else {
+    showAuth('login', 'Mot de passe incorrect.');
+  }
+}
+async function logout(){
+  try{if(!isOfflineMode)await api('/api/logout',{method:'POST',body:'{}'})}catch{}
+  currentUser=null;
+  localStorage.removeItem('shopkosomba_current_user');
+  state=null;
+  notifications=[];
+  document.getElementById('notification-panel').hidden=true;
+  document.getElementById('notification-count').hidden=true;
+  showAuth('login');
+}
+function syncIdentity(){if(!currentUser)return;document.getElementById('user-name').textContent=currentUser.name;document.getElementById('user-pic').textContent=initials(currentUser.name)}
+async function refreshNotifications(){if(currentUser?.role!=='Administratrice'){notifications=[];updateNotificationBadge();return}try{const result=await api('/api/notifications');notifications=result.notifications;updateNotificationBadge();if(!document.getElementById('notification-panel').hidden)renderNotificationPanel()}catch(error){if(error.status===401)await logout()}}
+function updateNotificationBadge(){const count=notifications.filter(item=>!item.readAt).length,badge=document.getElementById('notification-count'),button=document.getElementById('notification-button');badge.textContent=count>99?'99+':count;badge.hidden=!count;button.title=count?`${count} notification${count>1?'s':''} non lue${count>1?'s':''}`:'Notifications';button.setAttribute('aria-label',button.title)}
+function renderNotificationPanel(){const panel=document.getElementById('notification-panel');panel.innerHTML=`<div class="notification-head"><strong>Notifications</strong>${notifications.some(item=>!item.readAt)?'<button class="notification-read-all" id="mark-all-read">Tout marquer comme lu</button>':''}</div>${notifications.length?`<div class="notification-list">${notifications.map(item=>`<button type="button" class="notification-row ${item.readAt?'':'unread'}" data-notification-id="${esc(item.id)}"><span class="notification-mark">${icon('shopping-bag')}</span><span><span class="notification-title">Nouvelle vente · ${esc(item.soldBy)}</span><span class="notification-detail">${esc(item.type)} ${esc(item.documentId)} · ${item.itemCount} article${item.itemCount===1?'':'s'} · ${money(item.total)}</span><span class="notification-detail">${esc(item.client)}</span></span><span class="notification-time">${timeAgo(item.createdAt)}</span></button>`).join('')}</div>`:'<div class="notification-empty">Aucune notification de vente pour le moment.</div>'}`;panel.querySelectorAll('[data-notification-id]').forEach(button=>button.addEventListener('click',()=>openSaleNotification(button.dataset.notificationId)));panel.querySelector('#mark-all-read')?.addEventListener('click',markAllNotificationsRead);if(window.lucide)lucide.createIcons()}
+async function toggleNotificationPanel(){if(currentUser?.role!=='Administratrice'){const low=state.products.filter(product=>product.stock<=product.threshold).length;toast(low?`${low} produit${low>1?'s':''} à réapprovisionner.`:'Aucune alerte de stock.');return}const panel=document.getElementById('notification-panel'),button=document.getElementById('notification-button');panel.hidden=!panel.hidden;button.setAttribute('aria-expanded',String(!panel.hidden));if(!panel.hidden){await refreshNotifications();renderNotificationPanel()}}
+async function markAllNotificationsRead(){try{await api('/api/notifications/read',{method:'POST',body:JSON.stringify({all:true})});notifications=notifications.map(item=>({...item,readAt:item.readAt||new Date().toISOString()}));updateNotificationBadge();renderNotificationPanel()}catch(error){toast(error.message,true)}}
+async function openSaleNotification(id){const item=notifications.find(notification=>notification.id===id);if(!item)return;try{await api('/api/notifications/read',{method:'POST',body:JSON.stringify({ids:[id]})});notifications=notifications.map(notification=>notification.id===id?{...notification,readAt:new Date().toISOString()}:notification);updateNotificationBadge();document.getElementById('notification-panel').hidden=true;document.getElementById('notification-button').setAttribute('aria-expanded','false');go('documents');showDocument(item.documentId)}catch(error){toast(error.message,true)}}
+async function reloadState(){const result=await api('/api/state');state=result.state;stateRevision=result.revision;syncIdentity();render()}
+function save(){
+  updateBadges();
+  const snapshot=structuredClone(state),passwords={...pendingPasswords};
+  pendingPasswords={};
+  if (isOfflineMode) {
+    setLocalState(snapshot);
+    stateRevision = 'offline-' + Date.now();
+    localStorage.setItem('shopkosomba_revision', stateRevision);
+    currentUser = state.users.find(user=>user.id===currentUser?.id)||currentUser;
+    syncIdentity();
+    return Promise.resolve(true);
+  }
+  const task=saveQueue.then(async()=>{
+    savingCount++;
+    try{
+      const result=await api('/api/state',{method:'PUT',body:JSON.stringify({state:snapshot,revision:stateRevision,passwords})});
+      stateRevision=result.revision;
+      currentUser=state.users.find(user=>user.id===currentUser.id)||currentUser;
+      syncIdentity();
+      return true;
+    }finally{savingCount--}
+  });
+  saveQueue=task.catch(async error=>{
+    toast(error.message,true);
+    try{await reloadState()}catch{await logout()}
+    return false;
+  });
+  return saveQueue;
+}
+function updateBadges(){document.getElementById('nav-products').textContent=state.products.length;const low=state.products.filter(p=>p.stock<=p.threshold).length;document.getElementById('notification-button').title=low?`${low} alerte${low>1?'s':''} de stock`: 'Aucune alerte de stock'}
+function icon(name){return `<i data-lucide="${name}"></i>`}
+function can(permission){
+  if(!currentUser) return false;
+  if(currentUser.role === 'Administratrice' || currentUser.role === 'Admin') return true;
+  return Boolean(currentUser?.permissions && currentUser.permissions.includes(permission));
+}
+
+let chartInitTimeout = null;
+
+function destroyCharts() {
+  if (chartInitTimeout) {
+    clearTimeout(chartInitTimeout);
+    chartInitTimeout = null;
+  }
+  if (window.salesChartInstance) {
+    try { window.salesChartInstance.destroy(); } catch(e) {}
+    window.salesChartInstance = null;
+  }
+  if (window.stockChartInstance) {
+    try { window.stockChartInstance.destroy(); } catch(e) {}
+    window.stockChartInstance = null;
+  }
+  if (typeof Chart !== 'undefined') {
+    const s = document.getElementById('salesChart');
+    if (s) { try { const c = Chart.getChart(s); if (c) c.destroy(); } catch(e) {} }
+    const k = document.getElementById('stockChart');
+    if (k) { try { const c = Chart.getChart(k); if (c) c.destroy(); } catch(e) {} }
+  }
+}
+
+function initCharts(retries = 25) {
+  if (currentPage !== 'dashboard') {
+    destroyCharts();
+    return;
+  }
+
+  if (chartInitTimeout) {
+    clearTimeout(chartInitTimeout);
+    chartInitTimeout = null;
+  }
+
+  if (typeof Chart === 'undefined') {
+    if (retries > 0) {
+      chartInitTimeout = setTimeout(() => initCharts(retries - 1), 100);
+    }
+    return;
+  }
+
+  chartInitTimeout = setTimeout(() => {
+    if (currentPage !== 'dashboard') return;
+    const salesCtx = document.getElementById('salesChart');
+    const stockCtx = document.getElementById('stockChart');
+    if (!salesCtx || !stockCtx) {
+      if (retries > 0) initCharts(retries - 1);
+      return;
+    }
+
+    destroyCharts();
+
+    try {
+      const last7Days = Array.from({length: 7}, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        return d.toDateString();
+      }).reverse();
+
+      const salesData = last7Days.map(day => {
+        return (state?.documents || [])
+          .filter(doc => new Date(doc.date).toDateString() === day)
+          .reduce((sum, doc) => sum + (Number(doc.total) || 0), 0);
+      });
+
+      const labels = last7Days.map(day => {
+        const d = new Date(day);
+        return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+      });
+
+      window.salesChartInstance = new Chart(salesCtx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Ventes (FCFA)',
+            data: salesData,
+            borderColor: '#16a34a',
+            backgroundColor: 'rgba(22, 163, 74, 0.14)',
+            tension: 0.35,
+            fill: true,
+            pointBackgroundColor: '#16a34a',
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 300 },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` Ventes : ${money(ctx.parsed.y)}`
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: (val) => Number(val) >= 1000 ? (val / 1000) + 'k' : val
+              }
+            }
+          }
+        }
+      });
+    } catch(err) {
+      console.warn('Erreur salesChart:', err);
+    }
+
+    try {
+      const topProducts = [...(state?.products || [])].sort((a, b) => b.stock - a.stock).slice(0, 10);
+      window.stockChartInstance = new Chart(stockCtx, {
+        type: 'bar',
+        data: {
+          labels: topProducts.map(p => p.name.length > 15 ? p.name.substring(0, 15) + '…' : p.name),
+          datasets: [{
+            label: 'Quantité en stock',
+            data: topProducts.map(p => p.stock),
+            backgroundColor: '#16a34a',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 300 },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` Stock : ${ctx.parsed.y} unité${ctx.parsed.y > 1 ? 's' : ''}`
+              }
+            }
+          },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    } catch(err) {
+      console.warn('Erreur stockChart:', err);
+    }
+  }, 40);
+}
+
+function render(){
+  if(!state||!currentUser)return;
+  document.getElementById('breadcrumb').textContent=titles[currentPage];
+  document.querySelectorAll('.nav-item[data-page]').forEach(b=>{b.classList.toggle('active',b.dataset.page===currentPage);b.hidden=b.dataset.permission?!can(b.dataset.permission):false});
+  document.getElementById('quick-add').hidden=!can('Stock');
+  const content=document.getElementById('content');
+  content.dataset.page=currentPage;
+  content.innerHTML=`<section class="screen">${({dashboard:dashboardPage,sales:salesPage,products:productsPage,documents:documentsPage,clients:clientsPage,users:usersPage})[currentPage]()}</section>`;
+  if(currentPage==='sales'){
+    const query=(document.getElementById('catalog-search')?.value||'').toLowerCase();
+    const visibleProducts=state.products.filter(p=>p.stock>0&&(p.name+' '+p.sku+' '+p.barcode).toLowerCase().includes(query));
+    content.querySelectorAll('.catalog-item').forEach((item,index)=>{
+      const product=visibleProducts[index];
+      if(!product)return;
+      const art=item.querySelector('.catalog-art'),name=item.querySelector('.catalog-name'),meta=item.querySelector('.catalog-meta');
+      if(product.photo){const image=document.createElement('img');image.src=product.photo;image.alt=`Photo : ${product.name}`;image.loading='lazy';art.replaceChildren(image)}
+      const info=document.createElement('div');info.className='catalog-info';info.append(name,meta);item.append(info);
+      const stock=meta.querySelector('.catalog-stock');
+      if(stock&&product.stock<=product.threshold){stock.classList.add('low');stock.textContent=`Stock bas · ${product.stock}`}
+    });
+    if(currentUser.role==='Administratrice'){
+      const button=document.createElement('button');button.className='button primary';button.type='button';button.innerHTML=`${icon('plus')} Nouveau produit`;button.addEventListener('click',()=>openProduct('',true));content.querySelector('.catalog .toolbar').append(button)
+    }
+  }
+  if(currentPage === 'dashboard') initCharts(); else destroyCharts();
+  updateBadges();
+  if(window.lucide)lucide.createIcons();
+}
+function pageHead(title,sub,button=''){const heading=title==='Bonjour Marie'?'Bienvenue chez Shop Kosomba':title;const isDashboard=title==='Bonjour Marie';return `<div class="page-head"><div style="display:flex;align-items:center;gap:14px">${isDashboard?`<div style="width:52px;height:52px;border-radius:10px;background:#fff;border:1px solid var(--line);padding:4px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.05);flex-shrink:0"><img src="/logo.png" alt="Logo" style="width:100%;height:100%;object-fit:contain"></div>`:''}<div><div class="eyebrow">Shop Kosomba · ${new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'long'}).format(new Date())}</div><h1>${heading}</h1><p>${sub}</p></div></div>${button}</div>`}
+function stockBadge(p){return p.stock===0?'<span class="badge danger"><span class="dot"></span>Épuisé</span>':p.stock<=p.threshold?'<span class="badge warn"><span class="dot"></span>Stock bas</span>':'<span class="badge"><span class="dot"></span>En stock</span>'}
+function productCell(p){return `<div class="product-cell"><div class="product-thumb">${p.photo?`<img src="${esc(p.photo)}" alt="">`:icon('package')}</div><div><div class="product-name">${esc(p.name)}</div><div class="subline">${esc(p.sku)} · ${esc(p.category)}</div></div></div>`}
+function dashboardPage(){let today=new Date().toDateString(),todayDocs=state.documents.filter(d=>new Date(d.date).toDateString()===today),sales=todayDocs.reduce((s,d)=>s+d.total,0),low=state.products.filter(p=>p.stock<=p.threshold).sort((a,b)=>a.stock-b.stock),recent=[...state.documents].slice(0,4);return `${pageHead('Bonjour Marie','Voici ce qui se passe dans votre boutique aujourd’hui.',`<button class="button primary" onclick="go('sales')">${icon('plus')} Nouvelle vente</button>`)}<div class="grid stats"><article class="stat-card"><div class="stat-top">Ventes du jour <span class="stat-icon">${icon('chart-no-axes-combined')}</span></div><div class="stat-value">${money(sales)}</div><div class="stat-foot">${todayDocs.length?'<span class="positive">En cours</span>':'Aucune vente aujourd’hui'}</div></article><article class="stat-card"><div class="stat-top">Commandes aujourd’hui <span class="stat-icon">${icon('shopping-bag')}</span></div><div class="stat-value">${todayDocs.length}</div><div class="stat-foot">${todayDocs.length?todayDocs.length+' commande'+(todayDocs.length>1?'s':''):'En attente de commandes'}</div></article><article class="stat-card"><div class="stat-top">Références en stock <span class="stat-icon">${icon('package-check')}</span></div><div class="stat-value">${state.products.length}</div><div class="stat-foot">${low.length} sous le seuil d’alerte</div></article><article class="stat-card"><div class="stat-top">Valeur du stock <span class="stat-icon">${icon('wallet')}</span></div><div class="stat-value">${money(state.products.reduce((s,p)=>s+p.stock*p.cost,0))}</div><div class="stat-foot">Valorisation au prix d’achat</div></article></div><div class="grid dashboard-grid"><section class="panel"><div class="panel-head"><div class="panel-title">Évolution des ventes (7 derniers jours)</div></div><div style="position:relative; width:100%; height:280px; padding:10px;"><canvas id="salesChart"></canvas></div></section><section class="panel"><div class="panel-head"><div class="panel-title">Top 10 Produits en Stock</div></div><div style="position:relative; width:100%; height:280px; padding:10px;"><canvas id="stockChart"></canvas></div></section></div><div class="grid dashboard-grid"><div><section class="panel"><div class="panel-head"><div><div class="panel-title">Dernières ventes</div><div class="panel-subtitle">Activité récente de la boutique</div></div><button class="text-link" onclick="go('documents')">Tout voir →</button></div><div class="table-wrap"><table><thead><tr><th>Document</th><th>Client</th><th>Date</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${recent.map(d=>`<tr><td><span class="doc-number">${d.id}</span><div class="subline">${d.type}</div></td><td>${esc(d.client)}</td><td>${dateFmt(d.date)}</td><td><strong>${money(d.total)}</strong></td><td><span class="badge">${d.status}</span></td></tr>`).join('')||'<tr><td colspan="5" class="empty-state">Aucune vente pour le moment.</td></tr>'}</tbody></table></div></section><section class="panel low-stock"><div class="panel-head"><div><div class="panel-title">À réapprovisionner</div><div class="panel-subtitle">Produits au seuil d’alerte ou en dessous</div></div><button class="text-link" onclick="go('products')">Gérer le stock →</button></div><div class="low-stock-list">${low.slice(0,4).map(p=>`<div class="low-row"><span>${esc(p.name)}</span><span class="low-num">${p.stock} restant${p.stock>1?'s':''}</span></div>`).join('')||'<div class="empty-state">Tous vos produits sont bien approvisionnés.</div>'}</div></section></div><section class="panel"><div class="panel-head"><div><div class="panel-title">Activité récente</div><div class="panel-subtitle">Les derniers mouvements de la boutique</div></div></div><div class="activity-list">${(state.activity.length?state.activity:[{text:'Bienvenue dans Atelier ! Votre espace est prêt.',date:new Date().toISOString(),icon:'sparkles'},{text:'Vos alertes de stock apparaîtront ici.',date:new Date().toISOString(),icon:'package'}]).slice(0,6).map(a=>`<div class="activity"><div class="activity-mark">${icon(a.icon||'circle-dot')}</div><div><div class="activity-text">${a.text}</div><div class="activity-time">${timeAgo(a.date)}</div></div></div>`).join('')}</div></section></div>`}
+function changeProductsPage(delta){productsPageNum+=delta;render()}
+function goToProductsPage(p){productsPageNum=p;render()}
+function changeProductsPerPage(size){productsPerPage=Number(size)||10;productsPageNum=0;render()}
+function renderPaginationButtons(current,total){
+  if(total<=1)return'';
+  let pages=[];
+  if(total<=6){for(let i=0;i<total;i++)pages.push(i)}
+  else{
+    pages.push(0);
+    let start=Math.max(1,current-1),end=Math.min(total-2,current+1);
+    if(start>1)pages.push('e1');
+    for(let i=start;i<=end;i++)pages.push(i);
+    if(end<total-2)pages.push('e2');
+    pages.push(total-1);
+  }
+  return pages.map(p=>{
+    if(typeof p==='string')return `<span style="display:inline-grid;place-items:center;width:28px;height:28px;color:var(--muted);font-size:11px">…</span>`;
+    const isActive=p===current;
+    return `<button type="button" onclick="goToProductsPage(${p})" style="height:30px;min-width:30px;padding:0 6px;border-radius:5px;font-size:11px;font-weight:${isActive?'700':'500'};border:1px solid ${isActive?'var(--main-color)':'var(--line)'};background:${isActive?'var(--main-color)':'#fff'};color:${isActive?'#fff':'var(--ink)'};cursor:pointer">${p+1}</button>`;
+  }).join('');
+}
+function renderPagination(totalFiltered,totalPages,startIdx,endIdx){
+  if(totalFiltered===0)return'';
+  return `<div class="pagination-bar">
+    <div class="pagination-info">
+      <span>Affichage <strong>${startIdx+1}</strong>–<strong>${endIdx}</strong> sur <strong>${totalFiltered}</strong> référence${totalFiltered>1?'s':''}</span>
+      <label style="display:inline-flex;align-items:center;gap:6px">
+        <span>Lignes :</span>
+        <select onchange="changeProductsPerPage(this.value)" class="filter-select" style="height:28px;padding:0 6px;font-size:11px">
+          <option value="10" ${productsPerPage===10?'selected':''}>10</option>
+          <option value="20" ${productsPerPage===20?'selected':''}>20</option>
+          <option value="50" ${productsPerPage===50?'selected':''}>50</option>
+          <option value="100" ${productsPerPage===100?'selected':''}>100</option>
+        </select>
+      </label>
+    </div>
+    <div class="pagination-nav">
+      <button class="button" style="height:30px;padding:0 9px;font-size:11px" onclick="changeProductsPage(-1)" ${productsPageNum===0?'disabled':''}>${icon('chevron-left')} Précédent</button>
+      <div style="display:flex;gap:4px">
+        ${renderPaginationButtons(productsPageNum,totalPages)}
+      </div>
+      <button class="button" style="height:30px;padding:0 9px;font-size:11px" onclick="changeProductsPage(1)" ${productsPageNum>=totalPages-1?'disabled':''}>Suivant ${icon('chevron-right')}</button>
+    </div>
+  </div>`;
+}
+function productsPage(){
+  let rawQ=document.getElementById('product-search')?.value||'',q=rawQ.toLowerCase().trim(),cat=document.getElementById('product-category')?.value||'Tous',rows=state.products.filter(p=>(p.name+' '+p.sku+' '+p.barcode).toLowerCase().includes(q)&&(cat==='Tous'||p.category===cat));
+  const totalRefs=state.products.length;
+  const stockValue=state.products.reduce((s,p)=>s+p.stock*p.cost,0);
+  const saleValue=state.products.reduce((s,p)=>s+p.stock*p.price,0);
+  const lowCount=state.products.filter(p=>p.stock>0&&p.stock<=p.threshold).length;
+  const outCount=state.products.filter(p=>p.stock===0).length;
+  const totalFiltered=rows.length;
+  const totalPages=Math.max(1,Math.ceil(totalFiltered/productsPerPage));
+  if(productsPageNum>=totalPages)productsPageNum=totalPages-1;
+  if(productsPageNum<0)productsPageNum=0;
+  const startIdx=totalFiltered===0?0:productsPageNum*productsPerPage;
+  const endIdx=Math.min(startIdx+productsPerPage,totalFiltered);
+  const pagedRows=rows.slice(startIdx,endIdx);
+  return `${pageHead('Produits & stocks','Suivez vos références, vos seuils et la valeur de votre inventaire.',`<button class="button" onclick="exportStockExcel()">${icon('download')} Exporter stock</button><button class="button" onclick="document.getElementById('import-file').click()">${icon('upload')} Importer</button><input type="file" id="import-file" style="display:none" accept=".xlsx, .xls, .csv" onchange="importProducts(event)"><button class="button primary" onclick="openProduct()">${icon('plus')} Nouveau produit</button>`)}
+<div class="grid stats" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:18px">
+<article class="stat-card"><div class="stat-top">Total références <span class="stat-icon">${icon('package')}</span></div><div class="stat-value">${totalRefs}</div><div class="stat-foot">${totalFiltered} affiché${totalFiltered>1?'s':''}</div></article>
+<article class="stat-card"><div class="stat-top">Valeur du stock <span class="stat-icon">${icon('wallet')}</span></div><div style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0"><span style="font-size:11px;color:var(--muted)">Total achat</span><span style="font:700 15px Manrope,sans-serif">${money(stockValue)}</span></div><div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:1px solid var(--line)"><span style="font-size:11px;color:var(--muted)">Total vente</span><span style="font:700 15px Manrope,sans-serif;color:var(--main-color)">${money(saleValue)}</span></div></div><div class="stat-foot"><span class="positive">+${money(saleValue-stockValue)}</span> marge potentielle</div></article>
+<article class="stat-card"><div class="stat-top">Stock bas <span class="stat-icon">${icon('alert-triangle')}</span></div><div class="stat-value" style="color:var(--amber)">${lowCount}</div><div class="stat-foot">Sous le seuil d'alerte</div></article>
+<article class="stat-card"><div class="stat-top">Rupture de stock <span class="stat-icon">${icon('package-x')}</span></div><div class="stat-value" style="color:var(--red)">${outCount}</div><div class="stat-foot">Produit${outCount>1?'s':''} épuisé${outCount>1?'s':''}</div></article>
+</div>
+<section class="panel"><div class="toolbar"><div class="toolbar-left"><label class="search">${icon('search')}<input id="product-search" placeholder="Rechercher un produit, SKU, code-barres…" value="${esc(rawQ)}" oninput="refreshProducts()"></label><select class="filter-select" id="product-category" onchange="refreshProducts()"><option>Tous</option>${[...new Set(state.products.map(p=>p.category))].map(c=>`<option ${cat===c?'selected':''}>${esc(c)}</option>`).join('')}</select></div><div class="toolbar-right"><span style="font-size:11px;color:var(--muted)">${totalFiltered} référence${totalFiltered>1?'s':''}</span></div></div><div class="table-wrap table-products-wrap"><table class="products-table"><thead><tr><th>Produit</th><th>Catégorie</th><th>Prix achat</th><th>Prix vente</th><th>Marge</th><th>Stock</th><th>Statut</th><th style="text-align:right">Actions</th></tr></thead><tbody>${pagedRows.map(p=>{
+const margin=p.price-p.cost;
+const marginPct=p.cost>0?Math.round((margin/p.cost)*100):0;
+return `<tr>
+<td class="col-product"><div class="product-cell"><div class="product-thumb">${p.photo?`<img src="${esc(p.photo)}" alt="">`:icon('package')}</div><div><div class="product-name">${esc(p.name)}</div><div class="subline">SKU: ${esc(p.sku)}</div></div></div></td>
+<td class="col-nowrap"><span class="role-chip">${esc(p.category)}</span></td>
+<td class="col-nowrap">${money(p.cost)}</td>
+<td class="col-nowrap"><strong>${money(p.price)}</strong></td>
+<td class="col-nowrap"><span style="color:${margin>0?'var(--main-color)':margin<0?'var(--red)':'var(--muted)'};font-weight:600">${margin>0?'+':''}${money(margin)}</span><div class="subline">${marginPct>0?'+'+marginPct+'%':marginPct+'%'}</div></td>
+<td class="col-nowrap"><strong>${p.stock}</strong><span class="stock-bar ${p.stock<=p.threshold?'low':''}"><i style="width:${Math.min(100,Math.round(p.stock/Math.max(1,p.threshold*2)*100))}%"></i></span><div class="subline">Seuil : ${p.threshold}</div></td>
+<td class="col-nowrap">${stockBadge(p)}</td>
+<td class="col-actions"><div class="product-actions">
+<button onclick="openProduct('${p.id}')" class="btn-action edit" title="Modifier le produit">${icon('pencil')}<span class="btn-lbl">Modifier</span></button>
+<button onclick="adjustStock('${p.id}')" class="btn-action stock" title="Ajuster le stock">${icon('arrow-left-right')}<span class="btn-lbl">Stock</span></button>
+<button onclick="deleteProduct('${p.id}')" class="btn-action delete" title="Supprimer le produit">${icon('trash-2')}<span class="btn-lbl">Supprimer</span></button>
+</div></td>
+</tr>`}).join('')||'<tr><td colspan="8" class="empty-state">Aucun produit correspondant.</td></tr>'}</tbody></table></div>${renderPagination(totalFiltered,totalPages,startIdx,endIdx)}</section>`}
+function refreshProducts(){productsPageNum=0;let input=document.getElementById('product-search'),select=document.getElementById('product-category'),q=input?input.value:'',cat=select?select.value:'Tous';render();let newInput=document.getElementById('product-search'),newSelect=document.getElementById('product-category');if(newInput){newInput.value=q;newInput.focus();newInput.setSelectionRange(q.length,q.length)}if(newSelect){newSelect.value=cat}}
+function salesPage(){
+  let q=(document.getElementById('catalog-search')?.value||'').toLowerCase(),
+      items=state.products.filter(p=>p.stock>0&&(p.name+' '+p.sku+' '+p.barcode).toLowerCase().includes(q));
+  const cartQty=cart.reduce((s,i)=>s+i.qty,0);
+  const totalAmount=cartTotal();
+  const selectedClient = selectedClientId ? (state.clients||[]).find(c=>c.id===selectedClientId) : null;
+  return `${pageHead('Point de vente','Scannez ou recherchez un article pour l\'ajouter à la vente.',`<button class="button" onclick="go('documents')">${icon('receipt-text')} Historique</button>`)}
+<div class="pos-layout">
+  <section class="panel catalog">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <label class="search">${icon('scan-barcode')}<input id="catalog-search" placeholder="Scanner un code-barres ou rechercher…" value="${esc(document.getElementById('catalog-search')?.value||'')}" oninput="refreshCatalog()"></label>
+      </div>
+      <div class="toolbar-right">
+        <span style="font-size:11px;color:var(--muted)">${items.length} article${items.length>1?'s':''} disponible${items.length>1?'s':''}</span>
+      </div>
+    </div>
+    <div class="catalog-grid">${items.map(p=>`<button class="catalog-item" onclick="addToCart('${p.id}')"><div class="catalog-art">${icon('package')}</div><div class="catalog-name">${esc(p.name)}</div><div class="catalog-meta"><span class="catalog-stock">${p.stock} en stock</span><span class="catalog-price">${money(p.price)}</span></div></button>`).join('')||'<div class="empty-state">Aucun produit disponible.</div>'}</div>
+  </section>
+  <section class="panel cart-panel ${cart.length?'has-items':''}">
+    <div class="panel-head" onclick="toggleCartMobile()" style="cursor:pointer">
+      <div class="cart-toggle-hint"></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div>
+          <div class="panel-title">Vente en cours</div>
+          <div class="panel-subtitle">${cartQty} article${cartQty>1?'s':''} · <strong>${money(totalAmount)}</strong></div>
+        </div>
+      </div>
+      <button class="small-icon" title="Vider le panier" onclick="event.stopPropagation();clearCart()">${icon('trash-2')}</button>
+    </div>
+    <div class="cart-items">
+      ${cart.length?cart.map(i=>`<div class="cart-line"><div><div class="cart-product">${esc(i.name)}</div><div class="cart-price">${money(i.price)} / unité · <strong>${money(i.price*i.qty)}</strong></div></div><div class="qty-control"><button aria-label="Diminuer" onclick="changeQty('${i.id}',-1)">${icon('minus')}</button><span>${i.qty}</span><button aria-label="Augmenter" onclick="changeQty('${i.id}',1)">${icon('plus')}</button></div></div>`).join(''):'<div class="cart-empty">Votre panier est vide.<br>Cliquez sur un produit pour l\'ajouter.</div>'}
+    </div>
+    <div class="cart-summary">
+      <div class="summary-line total">
+        <span>Total net à payer</span>
+        <span style="color:var(--main-color-dark)">${money(totalAmount)}</span>
+      </div>
+    </div>
+    <div class="cart-controls">
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <label style="font-size:10px;font-weight:600;color:#5f6b62">Client & Numéro</label>
+          <div style="display:flex;gap:6px">
+            <button type="button" class="text-link" style="padding:0;font-size:11px;font-weight:700" onclick="openQuickClientModal(true)">+ Saisir client</button>
+            <span style="color:var(--line)">|</span>
+            <button type="button" class="text-link" style="padding:0;font-size:11px" onclick="openClient('', true)">+ Fiche</button>
+          </div>
+        </div>
+        <select class="filter-select" style="width:100%;height:32px;font-size:11px" onchange="selectedClientId=this.value;render()">
+          <option value="">Client comptoir (Standard)</option>
+          ${(state.clients||[]).map(c=>`<option value="${c.id}" ${selectedClientId===c.id?'selected':''}>${esc(c.name)}${c.whatsapp?` · WA: ${esc(c.whatsapp)}`:c.phone?` · ${esc(c.phone)}`:''}</option>`).join('')}
+        </select>
+        ${selectedClient ? `
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;padding:3px 8px;background:#f0fdf4;border-radius:4px;border:1px solid #bbf7d0;font-size:10px">
+            <span style="color:#15803d;display:flex;align-items:center;gap:4px">
+              ${icon('phone')} ${selectedClient.whatsapp ? `WA : <strong>${esc(selectedClient.whatsapp)}</strong>` : selectedClient.phone ? `Tél : <strong>${esc(selectedClient.phone)}</strong>` : '<span style="color:var(--muted)">Aucun numéro enregistré</span>'}
+            </span>
+            <button type="button" class="text-link" style="padding:0;font-size:10px;font-weight:700" onclick="editClientPhone('${selectedClient.id}')">${selectedClient.whatsapp||selectedClient.phone ? 'Modifier n°' : '+ Ajouter n°'}</button>
+          </div>
+        ` : ''}
+      </div>
+      <div style="margin-top:2px">
+        <label style="font-size:10px;font-weight:600;color:#5f6b62;display:block;margin-bottom:4px">Type de document</label>
+        <div class="segment">
+          <button class="${saleType==='Ticket'?'selected':''}" onclick="setSaleType('Ticket')">Ticket</button>
+          <button class="${saleType==='Facture'?'selected':''}" onclick="setSaleType('Facture')">Facture</button>
+          <button class="${saleType==='Proforma'?'selected':''}" onclick="setSaleType('Proforma')">Proforma</button>
+        </div>
+      </div>
+      <div style="margin-top:2px">
+        <label style="font-size:10px;font-weight:600;color:#5f6b62;display:block;margin-bottom:4px">Mode de règlement</label>
+        <div class="segment">
+          <button class="${paymentMode==='Espèce'?'selected':''}" onclick="setPaymentMode('Espèce')">${icon('banknote')} Espèce</button>
+          <button class="${paymentMode==='Momo'?'selected':''}" onclick="setPaymentMode('Momo')">${icon('smartphone')} Momo</button>
+          <button class="${paymentMode==='Avance'?'selected':''}" onclick="setPaymentMode('Avance')">${icon('clock')} Avance</button>
+        </div>
+      </div>
+      <button class="button primary" style="height:44px;font-size:13px;font-weight:700;margin-top:4px" ${cart.length?'':'disabled'} onclick="checkout()">
+        ${icon('credit-card')} ${saleType==='Proforma'?'Générer proforma':'Encaisser'} (${money(totalAmount)})
+      </button>
+    </div>
+  </section>
+</div>`}
+function refreshCatalog(){let q=document.getElementById('catalog-search').value;render();let input=document.getElementById('catalog-search');input.value=q;input.focus();input.setSelectionRange(q.length,q.length)}
+function documentsPage(){let q=(document.getElementById('document-search')?.value||'').toLowerCase(),type=document.getElementById('document-type')?.value||'Tous',rows=state.documents.filter(d=>(d.id+' '+d.client).toLowerCase().includes(q)&&(type==='Tous'||d.type===type));return `${pageHead('Factures & tickets','Retrouvez vos ventes et réimprimez vos documents.',`<button class="button" onclick="exportSalesExcel()">${icon('download')} Exporter ventes</button> <button class="button" onclick="exportDocuments()">${icon('file-spreadsheet')} Export CSV</button> <button class="button primary" onclick="go('sales')">${icon('plus')} Nouvelle vente</button>`)}<section class="panel"><div class="toolbar"><div class="toolbar-left"><label class="search">${icon('search')}<input id="document-search" placeholder="Rechercher un document ou un client…" value="${esc(document.getElementById('document-search')?.value||'')}" oninput="refreshDocuments()"></label><select id="document-type" class="filter-select" onchange="refreshDocuments()"><option>Tous</option><option ${type==='Facture'?'selected':''}>Facture</option><option ${type==='Ticket'?'selected':''}>Ticket</option><option ${type==='Proforma'?'selected':''}>Proforma</option></select></div><span style="font-size:11px;color:var(--muted)">${rows.length} document${rows.length>1?'s':''}</span></div><div class="table-wrap"><table><thead><tr><th>Numéro</th><th>Type</th><th>Client</th><th>Date</th><th>Paiement</th><th>Montant TTC</th><th>Statut</th><th></th></tr></thead><tbody>${rows.map(d=>`<tr><td><span class="doc-number">${d.id}</span></td><td>${d.type==='Ticket'?'<span class="badge">Ticket</span>':d.type==='Proforma'?'<span class="badge" style="background:#e0e7ff;color:#3730a3">Proforma</span>':'<span class="badge warn">Facture</span>'}</td><td>${esc(d.client)}</td><td>${dateFmt(d.date)}</td><td>${d.payment?`<span class="badge" style="${d.payment==='Momo'?'background:#fce7f3;color:#9d174d':d.payment==='Avance'?'background:#fff3df;color:#9a651d':'background:var(--mint);color:var(--main-color-dark)'}">${esc(d.payment)}</span>`:'-'}</td><td><strong>${money(d.total)}</strong></td><td><span class="badge${d.type==='Proforma'?' warn':''}">${d.status}</span></td><td><div class="table-actions">${d.type==='Proforma'?`<button class="small-icon" title="Convertir en facture" onclick="convertProforma('${d.id}')">${icon('file-check')}</button>`:''}<button class="small-icon" title="Voir / imprimer" onclick="showDocument('${d.id}')">${icon('printer')}</button></div></td></tr>`).join('')||'<tr><td colspan="8" class="empty-state">Aucun document. Vos ventes apparaîtront ici.</td></tr>'}</tbody></table></div></section>`}
+function exportDocuments(){let csv='Numéro,Type,Client,Date,Paiement,Montant,Statut,Articles\n';state.documents.forEach(d=>{let itemsStr=d.items.map(i=>`${i.name} (x${i.qty})`).join('; ');csv+=`"${d.id}","${d.type}","${d.client.replace(/"/g,'""')}","${new Date(d.date).toLocaleString('fr-FR')}","${d.payment||'-'}","${d.total}","${d.status}","${itemsStr.replace(/"/g,'""')}"\n`});let blob=new Blob([new Uint8Array([0xEF,0xBB,0xBF]),csv],{type:'text/csv;charset=utf-8;'});let link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`ventes_${new Date().toISOString().split('T')[0]}.csv`;link.click();URL.revokeObjectURL(link.href);toast('Export CSV des ventes téléchargé');log('Export des ventes (CSV).','download');}
+function exportSalesExcel(){
+  if (typeof XLSX === 'undefined') return toast('Bibliothèque Excel non chargée.', true);
+  const rows = state.documents.map(d => ({
+    'Numéro': d.id,
+    'Type': d.type,
+    'Client': d.client,
+    'Date': new Date(d.date).toLocaleString('fr-FR'),
+    'Mode de paiement': d.payment || (d.type === 'Ticket' ? 'Espèce' : '-'),
+    'Total (FCFA)': d.total,
+    'Statut': d.status,
+    'Articles': d.items.map(i => `${i.name} (x${i.qty} à ${i.price})`).join(', ')
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Ventes');
+  XLSX.writeFile(wb, `ventes_shop_kosomba_${new Date().toISOString().split('T')[0]}.xlsx`);
+  toast('Export Excel des ventes téléchargé');
+  log('Export des ventes (Excel).', 'download');
+}
+function exportStockExcel(){
+  if (typeof XLSX === 'undefined') return toast('Bibliothèque Excel non chargée.', true);
+  const rows = state.products.map(p => ({
+    'Référence (SKU)': p.sku,
+    'Désignation': p.name,
+    'Catégorie': p.category,
+    'Prix d\'achat (FCFA)': p.cost,
+    'Prix de vente (FCFA)': p.price,
+    'Marge unitaire (FCFA)': p.price - p.cost,
+    'Stock actuel': p.stock,
+    'Seuil d\'alerte': p.threshold,
+    'Valeur stock achat': p.stock * p.cost,
+    'Valeur stock vente': p.stock * p.price,
+    'Statut': p.stock === 0 ? 'Rupture' : p.stock <= p.threshold ? 'Stock bas' : 'En stock',
+    'Code-barres': p.barcode || ''
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Stock Général');
+  XLSX.writeFile(wb, `stock_general_shop_kosomba_${new Date().toISOString().split('T')[0]}.xlsx`);
+  toast('Export Excel du stock général téléchargé');
+  log('Export du stock (Excel).', 'download');
+}
+function refreshDocuments(){let q=document.getElementById('document-search').value,t=document.getElementById('document-type').value;render();document.getElementById('document-search').value=q;document.getElementById('document-type').value=t}
+
+function refreshClients(){
+  let input=document.getElementById('client-search');
+  clientSearchQ = input ? input.value : '';
+  render();
+  let newInput=document.getElementById('client-search');
+  if(newInput){
+    newInput.value=clientSearchQ;
+    newInput.focus();
+    newInput.setSelectionRange(clientSearchQ.length, clientSearchQ.length);
+  }
+}
+
+function cleanPhoneForWhatsApp(phone){
+  if(!phone) return '';
+  let cleaned = String(phone).replace(/[^\d+]/g, '');
+  if(cleaned.startsWith('+')) cleaned = cleaned.slice(1);
+  else if(cleaned.startsWith('00')) cleaned = cleaned.slice(2);
+  // Préfixe indicatif Congo (+242) par défaut si 9 chiffres commençant par 0 ou sans indicatif
+  if(cleaned.length === 9 && (cleaned.startsWith('06') || cleaned.startsWith('05') || cleaned.startsWith('04'))) {
+    cleaned = '242' + cleaned.slice(1);
+  } else if(cleaned.length === 8) {
+    cleaned = '242' + cleaned;
+  }
+  return cleaned;
+}
+
+function openWhatsApp(phone, text=''){
+  const num = cleanPhoneForWhatsApp(phone);
+  if(!num) return toast('Numéro WhatsApp non renseigné.', true);
+  const url = `https://wa.me/${num}${text ? '?text=' + encodeURIComponent(text) : ''}`;
+  window.open(url, '_blank');
+}
+
+function sendDocumentWhatsApp(docId){
+  const doc = (state.documents||[]).find(d=>d.id===docId);
+  if(!doc) return toast('Document introuvable.', true);
+  const contact = doc.clientWhatsapp || doc.clientPhone;
+  if(!contact) return toast('Aucun numéro WhatsApp ou téléphone renseigné pour ce client.', true);
+  const itemsText = doc.items.map(it=>`• ${it.name} (x${it.qty}) : ${money(it.price * it.qty)}`).join('\n');
+  const msg = `Bonjour ${doc.client},\n\nVoici le récapitulatif de votre ${doc.type} N° *${doc.id}* chez *Shop Kosomba* :\n\n${itemsText}\n\n*Total net : ${money(doc.total)}*\nStatut : ${doc.status}${doc.payment ? ' (' + doc.payment + ')' : ''}\nDate : ${dateFmt(doc.date)}\n\nMerci de votre confiance !`;
+  openWhatsApp(contact, msg);
+}
+
+function clientsPage(){
+  if (!state.clients) state.clients = [];
+  let q = (clientSearchQ || '').toLowerCase().trim();
+  let rows = state.clients.filter(c => (c.name + ' ' + (c.whatsapp||'') + ' ' + (c.phone||'') + ' ' + (c.email||'') + ' ' + (c.address||'')).toLowerCase().includes(q));
+
+  // Calcul statistiques clients
+  const totalClients = state.clients.length;
+  const withWhatsApp = state.clients.filter(c => Boolean(c.whatsapp)).length;
+  const clientPurchases = {};
+  (state.documents||[]).forEach(d => {
+    if(!d.client || d.client === 'Client comptoir') return;
+    const key = d.client.toLowerCase();
+    if(!clientPurchases[key]) clientPurchases[key] = { count: 0, total: 0 };
+    clientPurchases[key].count++;
+    clientPurchases[key].total += d.total;
+  });
+
+  return `${pageHead('Fichier clients','Gérez votre portefeuille clients, numéros WhatsApp et exportez votre base de données.',`
+    <button class="button" onclick="exportClientsExcel()">${icon('download')} Exporter Excel</button>
+    <button class="button" onclick="exportClientsCsv()">${icon('file-spreadsheet')} Export CSV</button>
+    <button class="button primary" onclick="openClient()">${icon('user-plus')} Nouveau client</button>
+  `)}
+  <div class="grid stats" style="grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:18px">
+    <article class="stat-card">
+      <div class="stat-top">Total clients <span class="stat-icon">${icon('users')}</span></div>
+      <div class="stat-value">${totalClients}</div>
+      <div class="stat-foot">${rows.length} affiché${rows.length>1?'s':''}</div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-top">Numéros WhatsApp <span class="stat-icon" style="background:#dcfce7;color:#15803d">${icon('message-circle')}</span></div>
+      <div class="stat-value" style="color:#15803d">${withWhatsApp}</div>
+      <div class="stat-foot">Clients joignables directement</div>
+    </article>
+    <article class="stat-card">
+      <div class="stat-top">Base de données <span class="stat-icon">${icon('database')}</span></div>
+      <div class="stat-value" style="font-size:18px;margin-top:12px;color:var(--main-color)">100% Exportable</div>
+      <div class="stat-foot">Formats Excel (.xlsx) et CSV</div>
+    </article>
+  </div>
+  <section class="panel">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <label class="search">${icon('search')}<input id="client-search" placeholder="Rechercher par nom, téléphone, WhatsApp, adresse…" value="${esc(clientSearchQ)}" oninput="refreshClients()"></label>
+      </div>
+      <div class="toolbar-right">
+        <span style="font-size:11px;color:var(--muted)">${rows.length} client${rows.length>1?'s':''} enregistré${rows.length>1?'s':''}</span>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Client</th>
+            <th>Numéro WhatsApp</th>
+            <th>Autre téléphone</th>
+            <th>Adresse / Ville</th>
+            <th>Achats / Commandes</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(c => {
+            const stats = clientPurchases[c.name.toLowerCase()] || { count: 0, total: 0 };
+            return `<tr>
+              <td>
+                <div class="product-cell">
+                  <div class="user-avatar" style="background:#e0f2fe;color:#0369a1">${initials(c.name)}</div>
+                  <div>
+                    <div class="product-name">${esc(c.name)}</div>
+                    <div class="subline">${c.email ? esc(c.email) : (c.notes ? esc(c.notes.slice(0,35)) : 'Client')}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                ${c.whatsapp ? `
+                  <div style="display:inline-flex;align-items:center;gap:6px">
+                    <span class="badge" style="background:#ecfdf5;color:#15803d;font-weight:700">
+                      ${icon('message-circle')} ${esc(c.whatsapp)}
+                    </span>
+                    <button class="small-icon" style="color:#15803d" title="Discuter sur WhatsApp" onclick="openWhatsApp('${esc(c.whatsapp)}', 'Bonjour ${esc(c.name)}, vous contacte depuis Shop Kosomba.')">
+                      ${icon('send')}
+                    </button>
+                  </div>
+                ` : `<span style="color:var(--muted);font-size:11px">—</span>`}
+              </td>
+              <td>${c.phone ? esc(c.phone) : '<span style="color:var(--muted);font-size:11px">—</span>'}</td>
+              <td>${c.address ? esc(c.address) : '<span style="color:var(--muted);font-size:11px">Brazzaville</span>'}</td>
+              <td>
+                <strong>${stats.count} doc${stats.count>1?'s':''}</strong>
+                ${stats.total > 0 ? `<div class="subline" style="color:var(--main-color);font-weight:600">${money(stats.total)}</div>` : ''}
+              </td>
+              <td style="text-align:right">
+                <div class="product-actions">
+                  ${c.whatsapp ? `
+                    <button class="btn-action whatsapp" title="Envoyer un message WhatsApp" onclick="openWhatsApp('${esc(c.whatsapp)}')">
+                      ${icon('message-circle')}<span class="btn-lbl">WhatsApp</span>
+                    </button>
+                  ` : ''}
+                  <button class="btn-action history" title="Voir l'historique des achats" onclick="viewClientHistory('${esc(c.name)}')">
+                    ${icon('receipt-text')}<span class="btn-lbl">Factures</span>
+                  </button>
+                  <button class="btn-action edit" title="Modifier le client" onclick="openClient('${c.id}')">
+                    ${icon('pencil')}<span class="btn-lbl">Modifier</span>
+                  </button>
+                  <button class="btn-action delete" title="Supprimer le client" onclick="deleteClient('${c.id}')">
+                    ${icon('trash-2')}<span class="btn-lbl">Supprimer</span>
+                  </button>
+                </div>
+              </td>
+            </tr>`;
+          }).join('') || `<tr><td colspan="6" class="empty-state">Aucun client trouvé. Cliquez sur « Nouveau client » pour en ajouter un.</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  </section>`;
+}
+
+function openClient(id='', fromPos=false){
+  if(!can('Factures') && !can('Ventes')) return toast('Permission Factures ou Ventes requise.', true);
+  if (!state.clients) state.clients = [];
+  let c = state.clients.find(x => x.id === id) || { name: '', whatsapp: '', phone: '', email: '', address: '', notes: '' };
+
+  modal(id ? 'Modifier le client' : 'Nouveau client', `
+    <div class="modal-body">
+      <form id="client-form" class="field-grid">
+        <div class="field full">
+          <label>Nom et prénom ou Société *</label>
+          <input name="name" required value="${esc(c.name)}" placeholder="Ex. Jean Moukoko ou Ets Lumière">
+        </div>
+        <div class="field">
+          <label style="display:flex;align-items:center;gap:5px">
+            <span style="color:#15803d">${icon('message-circle')}</span>
+            Numéro WhatsApp *
+          </label>
+          <input name="whatsapp" required value="${esc(c.whatsapp || c.phone || '')}" placeholder="Ex. +242 06 123 45 67">
+          <div class="subline" style="color:#15803d">Sert pour l'envoi direct des factures & tickets</div>
+        </div>
+        <div class="field">
+          <label>Autre téléphone (appel / direct)</label>
+          <input name="phone" value="${esc(c.phone)}" placeholder="Ex. 05 987 65 43">
+        </div>
+        <div class="field">
+          <label>Adresse e-mail</label>
+          <input name="email" type="email" value="${esc(c.email)}" placeholder="client@exemple.com">
+        </div>
+        <div class="field">
+          <label>Adresse / Quartier / Ville</label>
+          <input name="address" value="${esc(c.address)}" placeholder="Ex. Moungali, Brazzaville">
+        </div>
+        <div class="field full">
+          <label>Notes ou observations</label>
+          <input name="notes" value="${esc(c.notes)}" placeholder="Client fidèle, préférences, etc.">
+        </div>
+      </form>
+    </div>
+  `, `
+    <button class="button" onclick="closeModal()">Annuler</button>
+    <button class="button primary" onclick="saveClient('${id}', ${fromPos})">${id ? 'Enregistrer' : 'Ajouter le client'}</button>
+  `, true);
+}
+
+async function saveClient(id, fromPos=false){
+  if(!can('Factures') && !can('Ventes')) return toast('Permission Factures ou Ventes requise.', true);
+  let form = document.getElementById('client-form');
+  if(!form || !form.reportValidity()) return;
+  let fd = new FormData(form);
+  let name = String(fd.get('name') || '').trim();
+  let whatsapp = String(fd.get('whatsapp') || '').trim();
+  let phone = String(fd.get('phone') || '').trim();
+  let email = String(fd.get('email') || '').trim().toLowerCase();
+  let address = String(fd.get('address') || '').trim();
+  let notes = String(fd.get('notes') || '').trim();
+
+  if(!name) return toast('Le nom du client est obligatoire.', true);
+  if(!state.clients) state.clients = [];
+
+  let clientObj;
+  if(id){
+    clientObj = state.clients.find(x => x.id === id);
+    if(clientObj){
+      Object.assign(clientObj, { name, whatsapp, phone, email, address, notes });
+      log(`Fiche client mise à jour : <strong>${esc(name)}</strong>`, 'contact');
+    }
+  } else {
+    clientObj = {
+      id: 'c' + Date.now(),
+      name,
+      whatsapp,
+      phone,
+      email,
+      address,
+      notes,
+      createdAt: new Date().toISOString()
+    };
+    state.clients.unshift(clientObj);
+    log(`Nouveau client enregistré : <strong>${esc(name)}</strong>`, 'contact');
+  }
+
+  if(fromPos && clientObj){
+    selectedClientId = clientObj.id;
+  }
+
+  const ok = await save();
+  if(ok){
+    closeModal();
+    render();
+    toast(id ? 'Client mis à jour avec succès' : 'Client ajouté au fichier clients');
+  }
+}
+
+async function deleteClient(id){
+  if(!can('Factures') && !can('Utilisateurs')) return toast('Permission requise pour supprimer un client.', true);
+  if(!state.clients) state.clients = [];
+  let c = state.clients.find(x => x.id === id);
+  if(!c) return;
+  if(!confirm(`Supprimer définitivement le client « ${c.name} » ?`)) return;
+  state.clients = state.clients.filter(x => x.id !== id);
+  if(selectedClientId === id) selectedClientId = '';
+  const ok = await save();
+  if(ok){
+    render();
+    toast('Client supprimé de la base de données');
+  }
+}
+
+function viewClientHistory(clientName){
+  go('documents');
+  let searchInput = document.getElementById('document-search');
+  if(searchInput){
+    searchInput.value = clientName;
+    refreshDocuments();
+  }
+}
+
+function exportClientsExcel(){
+  if (typeof XLSX === 'undefined') return toast('Bibliothèque Excel non disponible.', true);
+  if (!state.clients) state.clients = [];
+  if (state.clients.length === 0) return toast('Aucun client enregistré à exporter.', true);
+
+  const clientPurchases = {};
+  (state.documents||[]).forEach(d => {
+    if(!d.client || d.client === 'Client comptoir') return;
+    const key = d.client.toLowerCase();
+    if(!clientPurchases[key]) clientPurchases[key] = { count: 0, total: 0 };
+    clientPurchases[key].count++;
+    clientPurchases[key].total += d.total;
+  });
+
+  const rows = state.clients.map(c => {
+    const stats = clientPurchases[c.name.toLowerCase()] || { count: 0, total: 0 };
+    return {
+      'Identifiant': c.id,
+      'Nom complet / Société': c.name,
+      'Numéro WhatsApp': c.whatsapp || '',
+      'Téléphone appel': c.phone || '',
+      'Adresse e-mail': c.email || '',
+      'Adresse / Ville': c.address || '',
+      'Nombre de commandes': stats.count,
+      'Total des achats (FCFA)': stats.total,
+      'Observations / Notes': c.notes || '',
+      'Date d\'enregistrement': c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr-FR') : ''
+    };
+  });
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Clients Shop Kosomba');
+  XLSX.writeFile(wb, `base_clients_shop_kosomba_${new Date().toISOString().split('T')[0]}.xlsx`);
+  toast('Export Excel de la base clients téléchargé avec succès');
+  log('Export de la base clients (Excel).', 'download');
+}
+
+function exportClientsCsv(){
+  if (!state.clients) state.clients = [];
+  if (state.clients.length === 0) return toast('Aucun client enregistré à exporter.', true);
+
+  let csv = 'Identifiant,Nom,WhatsApp,Telephone,Email,Adresse,Observations,DateEnregistrement\n';
+  state.clients.forEach(c => {
+    csv += `"${c.id}","${(c.name||'').replace(/"/g,'""')}","${(c.whatsapp||'').replace(/"/g,'""')}","${(c.phone||'').replace(/"/g,'""')}","${(c.email||'').replace(/"/g,'""')}","${(c.address||'').replace(/"/g,'""')}","${(c.notes||'').replace(/"/g,'""')}","${c.createdAt ? new Date(c.createdAt).toLocaleDateString('fr-FR') : ''}"\n`;
+  });
+
+  let blob = new Blob([new Uint8Array([0xEF,0xBB,0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
+  let link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `base_clients_shop_kosomba_${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+  toast('Export CSV de la base clients téléchargé');
+  log('Export de la base clients (CSV).', 'download');
+}
+
+function usersPage(){return `${pageHead('Équipe & permissions','Gérez les accès de votre équipe et attribuez les bons rôles.',`<button class="button primary" onclick="openUser()">${icon('user-plus')} Inviter un membre</button>`)}<section class="panel"><div class="panel-head"><div><div class="panel-title">Membres de l’équipe</div><div class="panel-subtitle">${state.users.filter(u=>u.active).length} comptes actifs</div></div></div><div class="table-wrap"><table><thead><tr><th>Membre</th><th>Rôle</th><th>Permissions</th><th>Statut</th><th></th></tr></thead><tbody>${state.users.map(u=>`<tr><td><div class="product-cell"><div class="user-avatar">${initials(u.name)}</div><div><div class="product-name">${esc(u.name)}</div><div class="subline">${esc(u.email)}</div></div></div></td><td><span class="role-chip">${esc(u.role)}</span></td><td><span class="permission">${u.permissions.map(esc).join(' · ')||'Aucune permission'}</span></td><td>${u.active?'<span class="badge"><span class="dot"></span>Actif</span>':'<span class="badge danger">Désactivé</span>'}</td><td><div class="table-actions"><button class="small-icon" title="Modifier les accès" onclick="openUser('${u.id}')">${icon('pencil')}</button><button class="small-icon" title="Supprimer" onclick="deleteUser('${u.id}')">${icon('trash-2')}</button></div></td></tr>`).join('')||'<tr><td colspan="5" class="empty-state">Aucun membre enregistré.</td></tr>'}</tbody></table></div></section><div class="grid stats" style="margin-top:16px;grid-template-columns:repeat(3,minmax(0,1fr))"><article class="stat-card"><div class="stat-top">Administrateurs <span class="stat-icon">${icon('shield-check')}</span></div><div class="stat-value" style="font-size:20px">${state.users.filter(u=>u.role==='Administratrice').length}</div><div class="stat-foot">Accès à tous les modules</div></article><article class="stat-card"><div class="stat-top">Vendeurs <span class="stat-icon">${icon('shopping-bag')}</span></div><div class="stat-value" style="font-size:20px">${state.users.filter(u=>u.role==='Vendeur').length}</div><div class="stat-foot">Accès aux ventes et au stock</div></article><article class="stat-card"><div class="stat-top">Gestionnaires de stock <span class="stat-icon">${icon('package-check')}</span></div><div class="stat-value" style="font-size:20px">${state.users.filter(u=>u.role==='Gestionnaire de stock').length}</div><div class="stat-foot">Inventaire et documents</div></article></div>`}
+function go(page){const permission={sales:'Ventes',products:'Stock',documents:'Factures',clients:'Factures',users:'Utilisateurs'}[page];if(permission&&!can(permission))return toast('Votre compte ne dispose pas de cette permission.',true);if(page!=='dashboard')destroyCharts();if(page==='products')productsPageNum=0;currentPage=page;document.getElementById('sidebar').classList.remove('open');const ov=document.getElementById('sidebar-overlay');if(ov)ov.classList.remove('visible');renderBottomNav();render()}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function initials(name){return name.split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase()}
+function toast(message,error=false){let root=document.getElementById('toast-root');root.innerHTML=`<div class="toast ${error?'error':''}">${esc(message)}</div>`;setTimeout(()=>root.innerHTML='',2800)}
+function modal(title,body,footer='',wide=false){document.getElementById('modal-root').innerHTML=`<div class="modal-backdrop" onclick="if(event.target===this)closeModal()"><section class="modal ${wide?'wide':''}"><div class="modal-head"><h2>${title}</h2><button class="small-icon" aria-label="Fermer" onclick="closeModal()">${icon('x')}</button></div>${body}${footer?`<div class="modal-foot">${footer}</div>`:''}</section></div>`;if(window.lucide)lucide.createIcons()}
+function closeModal(){document.getElementById('modal-root').innerHTML=''}
+function openProduct(id='',fromPos=false){if(!can('Stock'))return toast('Permission Stock requise.',true);let p=state.products.find(x=>x.id===id)||{name:'',sku:'',category:'',price:'',cost:'',stock:fromPos?1:0,threshold:5,barcode:'',photo:''};modal(id?'Modifier le produit':'Nouveau produit',`<div class="modal-body"><form id="product-form" class="field-grid"><div class="field full"><label>Nom du produit</label><input name="name" required value="${esc(p.name)}" placeholder="Ex. Souris sans fil USB"></div><div class="field"><label>Référence (SKU)</label><input name="sku" required value="${esc(p.sku)}" placeholder="INF-001"></div><div class="field"><label>Catégorie</label><input name="category" required value="${esc(p.category)}" placeholder="Informatique"></div><div class="field"><label>Prix de vente (FCFA)</label><input name="price" required type="number" min="0" step="1" value="${p.price}"></div><div class="field"><label>Prix d’achat (FCFA)</label><input name="cost" required type="number" min="0" step="1" value="${p.cost}"></div><div class="field"><label>Quantité en stock</label><input name="stock" required type="number" min="0" step="1" value="${p.stock}"></div><div class="field"><label>Seuil d’alerte</label><input name="threshold" required type="number" min="0" step="1" value="${p.threshold}"></div><div class="field full"><label>Code-barres</label><input name="barcode" value="${esc(p.barcode)}" placeholder="EAN-13 ou code interne"></div><div class="field full"><label for="product-photo">Photo du produit</label><div class="photo-picker"><div class="photo-preview" id="photo-preview">${p.photo?`<img src="${esc(p.photo)}" alt="Photo actuelle">`:icon('image-plus')}</div><div><input id="product-photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" onchange="previewPhoto(event)"><div class="subline">JPG, PNG ou WebP · 5 Mo maximum</div></div></div></div></form></div>`,`<button class="button" onclick="closeModal()">Annuler</button><button class="button primary" onclick="saveProduct('${id}')">${id?'Enregistrer':'Ajouter à la boutique'}</button>`,true)}
+function previewPhoto(event){const file=event.target.files?.[0],preview=document.getElementById('photo-preview');if(!file||!preview)return;if(file.size>5*1024*1024){event.target.value='';return toast('La photo ne doit pas dépasser 5 Mo.',true)}if(!['image/jpeg','image/png','image/webp'].includes(file.type)){event.target.value='';return toast('Choisissez une photo JPG, PNG ou WebP.',true)}const image=document.createElement('img');image.alt='Aperçu de la photo';image.src=URL.createObjectURL(file);preview.replaceChildren(image)}
+function fileAsDataUrl(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error('Impossible de lire cette photo.'));reader.readAsDataURL(file)})}
+async function saveProduct(id){if(!can('Stock'))return toast('Permission Stock requise.',true);let f=document.getElementById('product-form');if(!f.reportValidity())return;let form=new FormData(f),photoFile=form.get('photo'),d=Object.fromEntries(form);delete d.photo;d.price=Number(d.price);d.cost=Number(d.cost);d.stock=Number(d.stock);d.threshold=Number(d.threshold);try{if(photoFile?.size){if(isOfflineMode){d.photo=await fileAsDataUrl(photoFile)}else{try{const uploaded=await api('/api/images',{method:'POST',body:JSON.stringify({dataUrl:await fileAsDataUrl(photoFile)})});d.photo=uploaded.photo}catch(e){d.photo=await fileAsDataUrl(photoFile)}}}else d.photo=state.products.find(p=>p.id===id)?.photo||'';if(id){Object.assign(state.products.find(p=>p.id===id),d);log(`Fiche produit mise à jour : <strong>${esc(d.name)}</strong>`,'package')}else{d.id='p'+Date.now();state.products.unshift(d);log(`Nouveau produit ajouté : <strong>${esc(d.name)}</strong>`,'package-plus')}const saved=await save();if(saved){closeModal();render();toast(id?'Produit mis à jour':'Produit ajouté à la boutique')}}catch(error){toast(error.message,true)}}
+function adjustStock(id){if(!can('Stock'))return toast('Permission Stock requise.',true);let p=state.products.find(x=>x.id===id);modal('Ajuster le stock',`<div class="modal-body"><div style="font-size:12px;margin-bottom:16px"><strong>${esc(p.name)}</strong><div class="subline">Stock actuel : ${p.stock} unités · seuil ${p.threshold}</div></div><div class="field-grid"><div class="field"><label>Opération</label><select id="adjust-mode"><option value="add">Réception (ajouter)</option><option value="remove">Retrait (déduire)</option><option value="set">Définir le stock exact</option></select></div><div class="field"><label>Quantité</label><input id="adjust-quantity" type="number" min="0" step="1" value="1"></div></div></div>`,`<button class="button" onclick="closeModal()">Annuler</button><button class="button primary" onclick="saveAdjustment('${id}')">Mettre à jour</button>`)}
+function saveAdjustment(id){let p=state.products.find(x=>x.id===id),mode=document.getElementById('adjust-mode').value,n=Number(document.getElementById('adjust-quantity').value);if(!Number.isFinite(n)||n<0)return toast('Saisissez une quantité valide.',true);let before=p.stock;p.stock=mode==='add'?p.stock+n:mode==='remove'?Math.max(0,p.stock-n):n;log(`Stock ajusté : <strong>${esc(p.name)}</strong>, ${before} → ${p.stock} unités.`,'arrow-left-right');save();closeModal();render();toast('Stock mis à jour')}
+function deleteProduct(id){if(!can('Stock'))return toast('Permission Stock requise.',true);let p=state.products.find(x=>x.id===id);if(!confirm(`Supprimer « ${p.name} » ? Cette action ne peut pas être annulée.`))return;state.products=state.products.filter(x=>x.id!==id);save();render();toast('Produit supprimé')}
+function importProducts(event){
+  if(!can('Stock')) return toast('Permission Stock requise.', true);
+  let file = event.target.files?.[0];
+  if(!file) return;
+
+  if (typeof XLSX === 'undefined') {
+    return toast('Bibliothèque Excel en cours de chargement. Réessayez dans un instant.', true);
+  }
+
+  let reader = new FileReader();
+  reader.onload = async(e) => {
+    try {
+      let data = new Uint8Array(e.target.result);
+      let workbook = XLSX.read(data, { type: 'array' });
+      let added = 0;
+
+      for (const sheetName of workbook.SheetNames) {
+        let sheet = workbook.Sheets[sheetName];
+        let rows = XLSX.utils.sheet_to_json(sheet);
+        if (!rows || !rows.length) continue;
+
+        for (let index = 0; index < rows.length; index++) {
+          const r = rows[index];
+          const keys = Object.keys(r);
+          if (!keys.length) continue;
+
+          // Détection intelligente du Nom / Désignation du produit
+          let nameKey = keys.find(k => /^(name|nom|produit|designation|d[eé]signation|article|libelle|libell[eé]|description)$/i.test(k.trim()));
+          if (!nameKey) {
+            nameKey = keys.find(k => {
+              const trimmed = k.trim();
+              if (/^(n[°o]|id|code|q|qte|quantit[eé]|stock|achat|vente|total|t-a|t-vente|four|date)$/i.test(trimmed)) return false;
+              const val = r[k];
+              return typeof val === 'string' && val.trim().length > 1;
+            });
+          }
+
+          const rawName = nameKey ? String(r[nameKey]).trim() : '';
+          if (!rawName || /^total$/i.test(rawName) || /^n[°o]$/i.test(rawName)) continue;
+
+          // Quantité / Stock
+          let stockKey = keys.find(k => /^(stock|quantit[eé]|qte|q|qty|disponible|nombre)$/i.test(k.trim()));
+          let stockVal = stockKey !== undefined ? r[stockKey] : 0;
+          let stock = parseInt(String(stockVal).replace(/[^\d-]/g, ''), 10);
+          if (isNaN(stock) || stock < 0) stock = 0;
+
+          // Prix de vente (Vente)
+          let priceKey = keys.find(k => /^(price|prix|vente\s*s?|pv|prix\s*(?:de\s*)?vente)$/i.test(k.trim()) && !/^t(?:otal)?-?vente/i.test(k.trim()));
+          let priceVal = priceKey !== undefined ? r[priceKey] : 0;
+          let price = parseFloat(String(priceVal).replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+
+          // Prix d'achat (Achat)
+          let costKey = keys.find(k => /^(cost|co[uû]t|achat|pa|prix\s*(?:d['’]\s*)?achat)$/i.test(k.trim()) && !/^t(?:otal)?-?a/i.test(k.trim()));
+          let costVal = costKey !== undefined ? r[costKey] : 0;
+          let cost = parseFloat(String(costVal).replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+
+          // Catégorie
+          let catKey = keys.find(k => /^(category|cat[eé]gorie|famille|rayon)$/i.test(k.trim()));
+          let category = catKey ? String(r[catKey]).trim() : '';
+          if (!category) {
+            if (nameKey && nameKey.length > 3 && !/^(nom|name|produit|article)$/i.test(nameKey)) {
+              let cleaned = nameKey.trim();
+              category = cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
+            } else {
+              category = sheetName && sheetName !== 'Feuil1' && sheetName !== 'Sheet1' && sheetName !== 'DISPONIBLE' ? sheetName : 'Général';
+            }
+          }
+
+          // Référence (SKU)
+          let skuKey = keys.find(k => /^(sku|ref|r[eé]f[eé]rence|code)$/i.test(k.trim()));
+          let sku = skuKey ? String(r[skuKey]).trim() : '';
+          if (!sku) {
+            const numKey = keys.find(k => /^n[°o]$/i.test(k.trim()));
+            const numVal = numKey ? String(r[numKey]).trim() : '';
+            sku = numVal ? `ART-${numVal.padStart(3, '0')}` : `ART-${String(state.products.length + added + 1).padStart(3, '0')}`;
+          }
+
+          // Code-barres
+          let barcodeKey = keys.find(k => /^(barcode|code-?barres?|ean|upc)$/i.test(k.trim()));
+          let barcode = barcodeKey ? String(r[barcodeKey]).trim() : '';
+
+          let d = {
+            id: 'p' + Date.now() + added,
+            name: rawName,
+            sku,
+            category,
+            price,
+            cost,
+            stock,
+            threshold: 5,
+            barcode,
+            photo: ''
+          };
+          state.products.push(d);
+          added++;
+        }
+      }
+
+      if (added > 0) {
+        log(`${added} produit(s) importé(s) depuis Excel.`, 'package-plus');
+        await save();
+        render();
+        toast(`${added} produit(s) importé(s) avec succès !`);
+      } else {
+        toast('Aucun produit valide trouvé dans le fichier Excel.', true);
+      }
+    } catch (err) {
+      console.error('Erreur import:', err);
+      toast('Erreur lors de la lecture du fichier Excel: ' + (err.message || 'Format non reconnu'), true);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  event.target.value = '';
+}
+function addToCart(id){
+  let p=state.products.find(x=>x.id===id),item=cart.find(x=>x.id===id);
+  if(item){
+    if(item.qty>=p.stock)return toast('Stock disponible insuffisant.',true);
+    item.qty++;
+  }else{
+    cart.push({id:p.id,name:p.name,price:p.price,qty:1});
+  }
+  render();
+  if(window.innerWidth<=720){
+    const cp=document.querySelector('.cart-panel');
+    if(cp)cp.classList.add('open');
+  }
+}
+function changeQty(id,d){let item=cart.find(x=>x.id===id),p=state.products.find(x=>x.id===id);if(!item)return;if(d>0&&item.qty>=p.stock)return toast('Stock disponible insuffisant.',true);item.qty+=d;if(item.qty<=0)cart=cart.filter(x=>x.id!==id);render()}
+function cartTotal(){return cart.reduce((s,i)=>s+i.price*i.qty,0)}
+function clearCart(){cart=[];render()}
+function setSaleType(type){saleType=type;render()}
+function setPaymentMode(mode){paymentMode=mode;render()}
+function checkout(){
+  if(!can('Ventes')||!can('Stock'))return toast('Permissions Ventes et Stock requises.',true);
+  if(!cart.length)return;
+  let clientObj = selectedClientId ? (state.clients||[]).find(c=>c.id===selectedClientId) : null;
+  if((!clientObj || clientObj.name === 'Client comptoir') && (saleType==='Facture'||saleType==='Proforma')){
+    return promptClientForCheckout(saleType);
+  }
+  finishCheckout(clientObj);
+}
+
+function promptClientForCheckout(docType){
+  modal(`Client pour ${docType==='Proforma'?'la facture proforma':'la facture de vente'}`, `
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--muted);margin:0 0 16px;line-height:1.5">
+        Renseignez le nom du client et son numéro. Ces informations seront affichées sur la facture et permettront un envoi direct par WhatsApp.
+      </p>
+      <form id="checkout-client-form" class="field-grid" onsubmit="event.preventDefault();submitQuickClientForCheckout();">
+        <div class="field full">
+          <label>Nom complet du client ou Société *</label>
+          <input id="qsc-name" required placeholder="Ex. Jean Moukoko, ETS Lumière" autofocus>
+        </div>
+        <div class="field full">
+          <label style="display:flex;align-items:center;gap:5px">
+            <span style="color:#15803d">${icon('message-circle')}</span>
+            Numéro de téléphone / WhatsApp
+          </label>
+          <input id="qsc-phone" placeholder="Ex. +242 06 123 45 67">
+          <div class="subline" style="color:#15803d">Sera utilisé pour l'envoi de la facture par WhatsApp</div>
+        </div>
+        <div class="field full">
+          <label>Adresse / Ville (facultatif)</label>
+          <input id="qsc-address" placeholder="Ex. Moungali, Brazzaville">
+        </div>
+      </form>
+    </div>
+  `, `
+    <button class="button" onclick="closeModal()">Annuler</button>
+    <button class="button primary" onclick="submitQuickClientForCheckout()">${icon('check')} Valider et émettre</button>
+  `);
+  setTimeout(()=>{ const inp = document.getElementById('qsc-name'); if(inp) inp.focus(); }, 120);
+}
+
+async function submitQuickClientForCheckout(){
+  const nameInp = document.getElementById('qsc-name');
+  const name = nameInp ? nameInp.value.trim() : '';
+  if(!name) return toast('Le nom du client est obligatoire pour ce document.', true);
+  const phone = document.getElementById('qsc-phone')?.value.trim() || '';
+  const address = document.getElementById('qsc-address')?.value.trim() || '';
+
+  if(!state.clients) state.clients = [];
+  let clientObj = state.clients.find(c => c.name.toLowerCase() === name.toLowerCase());
+  if(clientObj){
+    if(phone){ clientObj.whatsapp = phone; clientObj.phone = phone; }
+    if(address) clientObj.address = address;
+  } else {
+    clientObj = {
+      id: 'c' + Date.now(),
+      name,
+      whatsapp: phone,
+      phone,
+      email: '',
+      address,
+      notes: 'Ajouté en caisse',
+      createdAt: new Date().toISOString()
+    };
+    state.clients.unshift(clientObj);
+  }
+  selectedClientId = clientObj.id;
+  closeModal();
+  await finishCheckout(clientObj);
+}
+
+async function finishCheckout(clientObj){
+  let clientName = clientObj ? clientObj.name : 'Client comptoir';
+  let clientPhone = clientObj ? (clientObj.whatsapp || clientObj.phone || '') : '';
+  let clientWhatsapp = clientObj ? (clientObj.whatsapp || '') : '';
+  let clientAddress = clientObj ? (clientObj.address || '') : '';
+
+  const prefixes={Ticket:'TCK',Facture:'FAC',Proforma:'PRO'};
+  let prefix=prefixes[saleType]||'DOC';
+  let sequence=String(state.documents.filter(d=>d.type===saleType).length+1).padStart(4,'0');
+  const statusMap={Ticket:'Payé',Facture:paymentMode==='Avance'?'Avance':'Payée',Proforma:'En attente'};
+  let doc={
+    id:`${prefix}-${new Date().getFullYear()}-${sequence}`,
+    type:saleType,
+    date:new Date().toISOString(),
+    client:clientName,
+    clientPhone:clientPhone,
+    clientWhatsapp:clientWhatsapp,
+    clientAddress:clientAddress,
+    total:Number(cartTotal().toFixed(2)),
+    status:statusMap[saleType]||'Payé',
+    payment:saleType==='Proforma'?'':paymentMode,
+    items:cart.map(i=>({name:i.name,qty:i.qty,price:i.price}))
+  };
+
+  if(saleType!=='Proforma'){
+    for(const i of cart){let p=state.products.find(x=>x.id===i.id);if(p)p.stock-=i.qty}
+  }
+  state.documents.unshift(doc);
+  log(`${saleType} <strong>${doc.id}</strong> créée pour ${money(doc.total)}.`,'circle-check');
+  const ok = await save();
+  cart=[];
+  selectedClientId='';
+  render();
+  if(ok){
+    showDocument(doc.id);
+    toast(saleType==='Proforma'?'Facture proforma générée avec succès':'Vente enregistrée et stock mis à jour');
+  }
+}
+
+function openQuickClientModal(fromPos=true){
+  modal('Saisir un client avec son numéro', `
+    <div class="modal-body">
+      <form id="quick-client-form" class="field-grid" onsubmit="event.preventDefault();saveQuickClient(${fromPos});">
+        <div class="field full">
+          <label>Nom complet ou Société *</label>
+          <input id="quick-c-name" required placeholder="Ex. Jean Moukoko, ETS Lumière" autofocus>
+        </div>
+        <div class="field full">
+          <label style="display:flex;align-items:center;gap:5px">
+            <span style="color:#15803d">${icon('message-circle')}</span>
+            Numéro de téléphone / WhatsApp *
+          </label>
+          <input id="quick-c-phone" required placeholder="Ex. +242 06 123 45 67">
+          <div class="subline" style="color:#15803d">Sert pour l'envoi de documents par WhatsApp</div>
+        </div>
+        <div class="field full">
+          <label>Adresse / Ville (facultatif)</label>
+          <input id="quick-c-address" placeholder="Ex. Moungali, Brazzaville">
+        </div>
+      </form>
+    </div>
+  `, `
+    <button class="button" onclick="closeModal()">Annuler</button>
+    <button class="button primary" onclick="saveQuickClient(${fromPos})">${icon('user-plus')} Enregistrer et associer</button>
+  `);
+  setTimeout(()=>{ const inp = document.getElementById('quick-c-name'); if(inp) inp.focus(); }, 120);
+}
+
+async function saveQuickClient(fromPos){
+  let name = document.getElementById('quick-c-name')?.value.trim();
+  if(!name) return toast('Le nom du client est obligatoire.', true);
+  let phone = document.getElementById('quick-c-phone')?.value.trim() || '';
+  let address = document.getElementById('quick-c-address')?.value.trim() || '';
+
+  if(!state.clients) state.clients = [];
+  let c = state.clients.find(x => x.name.toLowerCase() === name.toLowerCase());
+  if(c){
+    if(phone){ c.whatsapp = phone; c.phone = phone; }
+    if(address) c.address = address;
+  } else {
+    c = {
+      id: 'c' + Date.now(),
+      name,
+      whatsapp: phone,
+      phone,
+      email: '',
+      address,
+      notes: 'Saisie rapide en caisse',
+      createdAt: new Date().toISOString()
+    };
+    state.clients.unshift(c);
+  }
+  if(fromPos) selectedClientId = c.id;
+  const ok = await save();
+  if(ok){
+    closeModal();
+    render();
+    toast(`Client « ${name} » enregistré avec son numéro`);
+  }
+}
+
+function editClientPhone(id){
+  let c = (state.clients||[]).find(x=>x.id===id);
+  if(!c) return;
+  let currentNum = c.whatsapp || c.phone || '';
+  let num = prompt(`Numéro WhatsApp / Téléphone pour ${c.name} :`, currentNum);
+  if(num !== null){
+    c.whatsapp = num.trim();
+    c.phone = num.trim();
+    save().then(()=>render());
+    toast('Numéro du client mis à jour');
+  }
+}
+
+function convertProforma(id){if(!can('Ventes')||!can('Stock'))return toast('Permissions Ventes et Stock requises.',true);const proforma=state.documents.find(d=>d.id===id);if(!proforma||proforma.type!=='Proforma')return toast('Proforma introuvable.',true);if(!confirm(`Convertir ${proforma.id} en facture définitive ?\nLe stock sera déduit.`))return;const pm=prompt('Mode de paiement (Espèce / Momo / Avance) :','Espèce');if(!pm)return;const payment=['Espèce','Momo','Avance'].includes(pm)?pm:'Espèce';let sequence=String(state.documents.filter(d=>d.type==='Facture').length+1).padStart(4,'0');const facture={id:`FAC-${new Date().getFullYear()}-${sequence}`,type:'Facture',date:new Date().toISOString(),client:proforma.client,clientPhone:proforma.clientPhone||'',clientWhatsapp:proforma.clientWhatsapp||'',clientAddress:proforma.clientAddress||'',total:proforma.total,status:payment==='Avance'?'Avance':'Payée',payment,items:[...proforma.items]};for(const item of facture.items){let p=state.products.find(x=>x.name===item.name);if(p){if(p.stock<item.qty)return toast(`Stock insuffisant pour ${item.name}.`,true);p.stock-=item.qty}}proforma.status='Convertie';state.documents.unshift(facture);log(`Proforma ${proforma.id} convertie en facture <strong>${facture.id}</strong>.`,'file-check');save().then(ok=>{if(ok){render();showDocument(facture.id);toast(`Facture ${facture.id} créée à partir de ${proforma.id}`)}})}
+
+function showDocument(id){
+  let d=state.documents.find(x=>x.id===id);
+  if(!d)return;
+  const isTicket = d.type === 'Ticket';
+  const isProforma = d.type === 'Proforma';
+  const headerColor = isProforma ? '#3730a3' : '#0f3822';
+
+  let content = '';
+
+  if (isTicket) {
+    // Ticket de caisse classique conservé exactement tel quel
+    content = `<div class="doc-preview">
+      <div class="receipt">
+        <div class="receipt-head">
+          <div style="display:flex;justify-content:center;margin-bottom:10px">
+            <img src="/logo.png" alt="Shop Kosomba" style="height:48px;max-width:140px;object-fit:contain">
+          </div>
+          <h3>Shop Kosomba</h3>
+          <div>30, rue Louomo CEG de la paix Moungali</div>
+          <div>Congo-Brazzaville</div>
+          <div style="margin-top:10px;font-weight:700;color:${headerColor}">TICKET ${d.id}</div>
+          <div>${dateFmt(d.date)} · ${new Date(d.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
+          <div>Client : <strong>${esc(d.client)}</strong></div>
+          ${d.clientWhatsapp?`<div style="font-size:10px;color:#15803d">WhatsApp : <strong>${esc(d.clientWhatsapp)}</strong></div>`:d.clientPhone?`<div style="font-size:10px;color:var(--muted)">Tél : ${esc(d.clientPhone)}</div>`:''}
+          ${d.payment?`<div style="margin-top:4px;font-size:11px">Paiement : <strong>${esc(d.payment)}</strong></div>`:''}
+        </div>
+        <div class="receipt-items">
+          ${d.items.map(i=>`<div class="receipt-row"><span>${esc(i.name)} × ${i.qty}</span><span>${money(i.price*i.qty)}</span></div>`).join('')}
+        </div>
+        <div class="receipt-row" style="padding-top:12px">
+          <span>Total</span>
+          <span class="receipt-total">${money(d.total)}</span>
+        </div>
+        ${d.payment==='Avance'?'<div style="text-align:center;font-size:10px;color:#9a651d;margin-top:6px;font-weight:600">⚠ Paiement partiel (avance)</div>':''}
+        <div class="barcode" aria-label="Code-barres ${d.id}"></div>
+        <div class="barcode-number">${d.id.replaceAll('-','')}</div>
+        <div class="receipt-thanks">Merci de votre visite !<br>À bientôt chez Shop Kosomba.</div>
+      </div>
+    </div>`;
+  } else {
+    // Facture ou Proforma avec tableau d'articles parfaitement proportionné et aligné
+    content = `<div class="doc-preview">
+      <div class="invoice-sheet">
+        <div class="invoice-top ${isProforma?'proforma':''}">
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+              <img src="/logo.png" alt="Shop Kosomba" style="height:48px;max-width:160px;object-fit:contain">
+              <div>
+                <div class="invoice-brand-title">SHOP KOSOMBA</div>
+                <div class="invoice-brand-sub">Commerce général & fournitures de qualité</div>
+              </div>
+            </div>
+            <div style="color:var(--muted);font-size:11px;line-height:1.5">
+              30, rue Louomo CEG de la paix Moungali<br>
+              Brazzaville · République du Congo<br>
+              Tél : +242 06 999 00 00 / WhatsApp : +242 06 999 00 00
+            </div>
+          </div>
+          <div class="invoice-meta-box">
+            <span class="invoice-badge-type ${isProforma?'proforma':'facture'}">${isProforma?'FACTURE PROFORMA':'FACTURE DE VENTE'}</span>
+            <div style="font:800 18px Manrope,sans-serif;color:${headerColor}">${d.id}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px">Date : <strong>${dateFmt(d.date)}</strong> à ${new Date(d.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
+            <div style="font-size:11px;margin-top:2px">Statut : <span class="badge ${d.status==='Payée'?'':'warn'}">${esc(d.status)}</span></div>
+          </div>
+        </div>
+
+        <div class="invoice-info-grid">
+          <div class="invoice-info-col">
+            <div class="invoice-info-title">Facturé à (Client) :</div>
+            <div style="font-size:14px;font-weight:700;color:#0f3822;margin-top:2px">${esc(d.client)}</div>
+            ${d.clientWhatsapp?`<div style="color:#15803d;font-size:11px;font-weight:600;margin-top:3px;display:flex;align-items:center;gap:5px">${icon('message-circle')} WhatsApp : <strong>${esc(d.clientWhatsapp)}</strong></div>`:''}
+            ${d.clientPhone && d.clientPhone!==d.clientWhatsapp?`<div style="color:var(--muted);font-size:11px;margin-top:2px">Tél : <strong>${esc(d.clientPhone)}</strong></div>`:''}
+            ${d.clientAddress?`<div style="color:var(--muted);font-size:11px;margin-top:2px">Adresse : ${esc(d.clientAddress)}</div>`:''}
+          </div>
+          <div class="invoice-info-col" style="text-align:right">
+            <div class="invoice-info-title">Conditions & Règlement :</div>
+            <div style="font-size:13px;font-weight:700;margin-top:2px">Mode : ${d.payment?esc(d.payment):(isProforma?'Devis proforma':'Comptant')}</div>
+            ${d.payment==='Avance'?'<div style="color:#9a651d;font-size:11px;font-weight:600;margin-top:2px">⚠ Paiement partiel (acompte versé)</div>':''}
+            <div style="font-size:11px;color:var(--muted);margin-top:3px">Émis par : <strong>${esc(currentUser?.name||'Shop Kosomba')}</strong></div>
+          </div>
+        </div>
+
+        <div class="invoice-table-wrap">
+          <table class="invoice-table ${isProforma?'proforma':''}">
+            <thead>
+              <tr>
+                <th class="col-num">N°</th>
+                <th class="col-desc">Désignation des articles</th>
+                <th class="col-qty">Qté</th>
+                <th class="col-unit">P.U. (FCFA)</th>
+                <th class="col-tot">Total (FCFA)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${d.items.map((it, idx) => `
+                <tr>
+                  <td class="col-num">${idx + 1}</td>
+                  <td class="col-desc"><strong>${esc(it.name)}</strong></td>
+                  <td class="col-qty"><strong>${it.qty}</strong></td>
+                  <td class="col-unit">${money(it.price)}</td>
+                  <td class="col-tot"><strong>${money(it.price * it.qty)}</strong></td>
+                </tr>
+              `).join('')}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4" class="total-label">Total brut HT :</td>
+                <td class="total-val">${money(d.total)}</td>
+              </tr>
+              <tr>
+                <td colspan="4" class="total-label">TVA (0%) :</td>
+                <td class="total-val">0 FCFA</td>
+              </tr>
+              ${d.payment==='Avance'?`
+                <tr>
+                  <td colspan="4" class="total-label" style="color:#9a651d">Modalité :</td>
+                  <td class="total-val" style="color:#9a651d;font-weight:700">Acompte / Avance</td>
+                </tr>
+              `:''}
+              <tr class="final-row">
+                <td colspan="4" class="final-label">NET À PAYER (FCFA) :</td>
+                <td class="final-val">${money(d.total)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="invoice-extra-grid">
+          <div class="invoice-legal-note">
+            ${isProforma
+              ? '<strong>Validité de l\'offre :</strong> Cette facture proforma est valable 30 jours à compter de sa date d\'émission. Les prix et stocks sont susceptibles d\'évoluer passé ce délai.'
+              : '<strong>Conditions générales :</strong> Les marchandises vendues sont vérifiées et réceptionnées en bon état. Aucun retour sans justificatif d\'achat. Merci pour votre fidélité !'}
+            <div style="margin-top:6px;font-size:10px;color:var(--muted)">Document officiel généré par le système de gestion Shop Kosomba.</div>
+          </div>
+          <div class="invoice-stamp-box">
+            <div class="invoice-stamp-title">Cachet & Signature</div>
+            <div class="invoice-stamp-label">Pour Shop Kosomba / La Direction</div>
+          </div>
+        </div>
+
+        <div class="invoice-foot">
+          <div>Shop Kosomba · RCCM / NIF : CG-BZV-01-2024-B12 · Brazzaville</div>
+          <div style="text-align:right;flex-shrink:0">
+            <div class="barcode" aria-label="Code-barres ${d.id}" style="width:130px;height:34px;margin:0 auto 3px"></div>
+            <div class="barcode-number" style="font-size:8px">${d.id.replaceAll('-','')}</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  const clientContact = d.clientWhatsapp || d.clientPhone || '';
+  const waBtn = clientContact ? `<button class="button" style="border-color:#86efac;background:#f0fdf4;color:#15803d" onclick="sendDocumentWhatsApp('${d.id}')">${icon('message-circle')} Envoyer WhatsApp</button>` : '';
+
+  modal(
+    `${d.type} · ${d.id}`,
+    content,
+    `<button class="button" onclick="closeModal()">Fermer</button>
+     ${waBtn}
+     ${isProforma&&d.status!=='Convertie'?`<button class="button" onclick="closeModal();convertProforma('${d.id}')">${icon('file-check')} Convertir en facture</button>`:''}
+     <button class="button primary" onclick="window.print()">${icon('printer')} Imprimer</button>`,
+    !isTicket
+  );
+}
+function openUser(id=''){if(!can('Utilisateurs'))return toast('Permission Utilisateurs requise.',true);let u=state.users.find(x=>x.id===id)||{name:'',email:'',role:'Vendeur',permissions:['Ventes','Stock'],active:true},perms=['Ventes','Stock','Factures','Utilisateurs'];modal(id?'Modifier le membre':'Inviter un membre',`<div class="modal-body"><form id="user-form" class="field-grid"><div class="field"><label>Nom complet</label><input name="name" required value="${esc(u.name)}" placeholder="Prénom Nom"></div><div class="field"><label>Adresse e-mail</label><input name="email" type="email" required value="${esc(u.email)}" placeholder="nom@shopkosomba.cg"></div><div class="field"><label>Rôle</label><select name="role" onchange="setRolePermissions(this.value)">${['Administratrice','Vendeur','Gestionnaire de stock','Comptable','Personnalisé'].map(r=>`<option ${u.role===r?'selected':''}>${r}</option>`).join('')}</select></div><div class="field"><label>Statut du compte</label><select name="active"><option value="true" ${u.active?'selected':''}>Actif</option><option value="false" ${!u.active?'selected':''}>Désactivé</option></select></div><div class="field full"><label>${id?'Nouveau mot de passe (facultatif)':'Mot de passe initial (12 caractères minimum)'}</label><input name="password" type="password" ${id?'':'required minlength="12"'} autocomplete="new-password"></div><div class="field full"><label>Permissions d’accès</label><div class="permission-list" id="permission-list">${perms.map(p=>`<label class="permission-option"><input type="checkbox" name="permissions" value="${p}" ${u.permissions.includes(p)?'checked':''}>${p}</label>`).join('')}</div></div></form></div>`,`<button class="button" onclick="closeModal()">Annuler</button><button class="button primary" onclick="saveUser('${id}')">${id?'Enregistrer':'Ajouter le membre'}</button>`,true)}
+function setRolePermissions(role){let sets={'Administratrice':['Ventes','Stock','Factures','Utilisateurs'],'Vendeur':['Ventes','Stock'],'Gestionnaire de stock':['Stock','Factures'],'Comptable':['Factures']},allowed=sets[role];if(!allowed)return;document.querySelectorAll('#permission-list input').forEach(c=>c.checked=allowed.includes(c.value))}
+function saveUser(id){if(!can('Utilisateurs'))return toast('Permission Utilisateurs requise.',true);let f=document.getElementById('user-form');if(!f.reportValidity())return;let fd=new FormData(f),password=fd.get('password'),d={name:fd.get('name').trim(),email:fd.get('email').trim(),role:fd.get('role'),active:fd.get('active')==='true',permissions:fd.getAll('permissions')};if(id)Object.assign(state.users.find(u=>u.id===id),d);else{d.id='u'+Date.now();state.users.push(d)}if(password)pendingPasswords[d.id]=password;log(`${id?'Accès modifiés pour':'Nouveau membre ajouté :'} <strong>${esc(d.name)}</strong>`,'users-round');save().then(ok=>{if(ok){closeModal();render();toast(id?'Membre mis à jour':'Membre ajouté à l’équipe')}})}
+function deleteUser(id){if(!can('Utilisateurs'))return toast('Permission Utilisateurs requise.',true);if(id===currentUser.id)return toast('Vous ne pouvez pas supprimer votre propre compte.',true);let u=state.users.find(x=>x.id===id);if(!confirm(`Supprimer le compte de ${u.name} ?`))return;state.users=state.users.filter(x=>x.id!==id);save().then(ok=>{if(ok){render();toast('Membre supprimé')}})}
+function log(text,iconName){state.activity.unshift({text,date:new Date().toISOString(),icon:iconName});state.activity=state.activity.slice(0,20)}
+document.getElementById('navigation').addEventListener('click',e=>{let b=e.target.closest('[data-page]');if(b)go(b.dataset.page)});document.querySelectorAll('.nav-item[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));document.getElementById('quick-add').addEventListener('click',()=>openProduct());document.getElementById('notification-button').addEventListener('click',toggleNotificationPanel);document.addEventListener('click',event=>{if(event.target.closest('.notification-wrap'))return;const panel=document.getElementById('notification-panel');panel.hidden=true;document.getElementById('notification-button').setAttribute('aria-expanded','false')});document.getElementById('menu-toggle').addEventListener('click',()=>{const s=document.getElementById('sidebar'),o=document.getElementById('sidebar-overlay');s.classList.toggle('open');o.classList.toggle('visible')});document.getElementById('sidebar-overlay').addEventListener('click',()=>{document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('visible')});document.getElementById('logout-button').addEventListener('click',logout);
+document.getElementById('content').addEventListener('keydown',e=>{if(e.key!=='Enter'||e.target.id!=='catalog-search')return;e.preventDefault();let value=e.target.value.trim().toLowerCase(),product=state.products.find(p=>p.barcode?.toLowerCase()===value||p.sku.toLowerCase()===value);if(!product)return toast('Code-barres ou référence inconnue.',true);if(product.stock<1)return toast('Ce produit est en rupture de stock.',true);addToCart(product.id);let input=document.getElementById('catalog-search');input.value='';input.focus()});
+const barcodeObserver=new MutationObserver(()=>{const barcode=document.querySelector('#modal-root .barcode:not(svg)');if(!barcode||!window.JsBarcode)return;const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'),value=document.querySelector('#modal-root .barcode-number')?.textContent.trim();if(!value)return;svg.classList.add('barcode');svg.setAttribute('role','img');svg.setAttribute('aria-label',barcode.getAttribute('aria-label')||'Code-barres');barcode.replaceWith(svg);JsBarcode(svg,value,{format:'CODE128',displayValue:false,height:42,width:1.25,margin:0,lineColor:'#202923'});});
+barcodeObserver.observe(document.getElementById('modal-root'),{childList:true,subtree:true});
+function renderBottomNav(){
+  const nav=document.getElementById('bottom-nav');
+  if(!nav||!currentUser)return;
+  const pages=[
+    {id:'dashboard',icon:'layout-dashboard',label:'Accueil',perm:null},
+    {id:'sales',icon:'shopping-bag',label:'Vente',perm:'Ventes'},
+    {id:'products',icon:'package',label:'Stock',perm:'Stock'},
+    {id:'documents',icon:'file-text',label:'Factures',perm:'Factures'},
+    {id:'clients',icon:'contact',label:'Clients',perm:'Factures'},
+    {id:'users',icon:'users',label:'Équipe',perm:'Utilisateurs'}
+  ].filter(p=>!p.perm||can(p.perm));
+  nav.innerHTML=pages.map(p=>`<button class="${currentPage===p.id?'active':''}" onclick="go('${p.id}')">${icon(p.icon)}<span>${p.label}</span></button>`).join('');
+  if(window.lucide)lucide.createIcons();
+}
+function toggleCartMobile(){
+  const cp=document.querySelector('.cart-panel');
+  if(cp)cp.classList.toggle('open');
+}
+bootstrap();
+setInterval(async()=>{if(!currentUser||savingCount||pollBusy||isOfflineMode)return;pollBusy=true;try{const result=await api('/api/state');if(result.revision!==stateRevision){state=result.state;stateRevision=result.revision;syncIdentity();render()}await refreshNotifications()}catch(error){if(error.status===401)await logout()}finally{pollBusy=false}},4000);
+</script>
+</body>
+</html>

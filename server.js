@@ -9,6 +9,7 @@ const DATA_DIR = process.env.SHOP_DATA_DIR || path.join(ROOT, '.data');
 const DB_PATH = path.join(DATA_DIR, 'shop-kosomba.sqlite');
 const PORT = Number(process.env.PORT || 4173);
 const HOST = process.env.HOST || '0.0.0.0';
+const APP_ORIGIN = process.env.APP_ORIGIN || '';
 const PERMISSIONS = new Set(['Ventes', 'Stock', 'Factures', 'Utilisateurs']);
 const ROLES = new Set(['Administratrice', 'Vendeur', 'Gestionnaire de stock', 'Comptable', 'Personnalisé']);
 const COOKIE = 'shopkosomba_session';
@@ -110,7 +111,7 @@ function sameOrigin(req) {
   if (!origin) return;
   let parsed;
   try { parsed = new URL(origin); } catch { fail(403, 'Origine refusée.'); }
-  if (parsed.host !== req.headers.host) fail(403, 'Origine refusée.');
+  if (parsed.host !== req.headers.host && parsed.origin !== APP_ORIGIN) fail(403, 'Origine refusée.');
 }
 function startSession(userId, res, req) {
   const token = crypto.randomBytes(32).toString('base64url');
@@ -120,7 +121,7 @@ function startSession(userId, res, req) {
 function deepEqual(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
 function cleanState(input) {
   if (!input || !Array.isArray(input.products) || !Array.isArray(input.users) || !Array.isArray(input.documents) || !Array.isArray(input.activity)) fail(400, 'Format de données invalide.');
-  if (input.products.length > 10000 || input.users.length > 1000 || input.documents.length > 100000) fail(400, 'Limite de données dépassée.');
+  if (input.products.length > 10000 || input.users.length > 1000 || input.documents.length > 100000 || (Array.isArray(input.clients) && input.clients.length > 20000)) fail(400, 'Limite de données dépassée.');
   const products = input.products.map(product => {
     if (!product.id || !product.name?.trim() || !product.sku?.trim() || !product.category?.trim()) fail(400, 'Produit invalide.');
     for (const field of ['price', 'cost', 'stock', 'threshold']) if (!Number.isFinite(Number(product[field])) || Number(product[field]) < 0) fail(400, 'Valeur de produit invalide.');
@@ -136,11 +137,21 @@ function cleanState(input) {
   if (new Set(users.map(u => u.id)).size !== users.length || new Set(users.map(u => u.email)).size !== users.length) fail(409, 'Identifiant ou adresse e-mail déjà utilisé.');
   if (users.filter(u => u.active && u.permissions.includes('Utilisateurs')).length === 0) fail(400, 'Au moins un compte actif doit conserver la permission Utilisateurs.');
   const documents = input.documents.map(doc => {
-    if (!doc.id || !['Facture', 'Ticket'].includes(doc.type) || !Array.isArray(doc.items) || !Number.isFinite(Number(doc.total)) || Number(doc.total) < 0) fail(400, 'Document invalide.');
-    return { id: String(doc.id), type: doc.type, date: String(doc.date), client: String(doc.client || ''), total: Number(doc.total), status: String(doc.status || ''), items: doc.items.map(item => ({ name: String(item.name), qty: Number(item.qty), price: Number(item.price) })) };
+    if (!doc.id || !['Facture', 'Ticket', 'Proforma'].includes(doc.type) || !Array.isArray(doc.items) || !Number.isFinite(Number(doc.total)) || Number(doc.total) < 0) fail(400, 'Document invalide.');
+    return { id: String(doc.id), type: doc.type, date: String(doc.date), client: String(doc.client || ''), clientPhone: String(doc.clientPhone || ''), clientAddress: String(doc.clientAddress || ''), total: Number(doc.total), status: String(doc.status || ''), payment: String(doc.payment || ''), items: doc.items.map(item => ({ name: String(item.name), qty: Number(item.qty), price: Number(item.price) })) };
   });
+  const clients = Array.isArray(input.clients) ? input.clients.map(c => ({
+    id: String(c.id || ('c' + Date.now())),
+    name: String(c.name || '').trim(),
+    phone: String(c.phone || '').trim(),
+    whatsapp: String(c.whatsapp || c.phone || '').trim(),
+    email: String(c.email || '').trim().toLowerCase(),
+    address: String(c.address || '').trim(),
+    notes: String(c.notes || '').trim(),
+    createdAt: String(c.createdAt || new Date().toISOString())
+  })).filter(c => c.name.length > 0) : [];
   const activity = input.activity.slice(0, 100).map(item => ({ text: String(item.text || '').replace(/<[^>]*>/g, '').slice(0, 500), date: String(item.date || new Date().toISOString()), icon: String(item.icon || 'circle-dot') }));
-  return { products, users, documents, activity };
+  return { products, users, documents, clients, activity };
 }
 
 const loginAttempts = new Map();
@@ -152,6 +163,20 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Length': html.length, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin', 'X-Frame-Options': 'DENY', 'Strict-Transport-Security': 'max-age=31536000; includeSubDomains' });
       res.end(html);
       return;
+    }
+    if (req.method === 'GET' && (url.pathname === '/logo.png' || url.pathname === '/favicon.ico' || url.pathname === '/robots.txt' || url.pathname === '/chart.umd.min.js')) {
+      let targetPath = path.join(ROOT, url.pathname.slice(1));
+      if (!fs.existsSync(targetPath)) {
+        targetPath = path.join(ROOT, 'dist', url.pathname.slice(1));
+      }
+      if (fs.existsSync(targetPath)) {
+        const ext = path.extname(targetPath).toLowerCase();
+        const mime = { '.png': 'image/png', '.ico': 'image/x-icon', '.txt': 'text/plain', '.js': 'application/javascript; charset=utf-8' }[ext] || 'application/octet-stream';
+        const fileContent = fs.readFileSync(targetPath);
+        res.writeHead(200, { 'Content-Type': mime, 'Content-Length': fileContent.length, 'Cache-Control': 'public, max-age=86400', 'X-Content-Type-Options': 'nosniff' });
+        res.end(fileContent);
+        return;
+      }
     }
     const imageMatch = /^\/images\/([a-f0-9]{64})\.(jpg|png|webp)$/.exec(url.pathname);
     if (req.method === 'GET' && imageMatch) {
@@ -226,12 +251,17 @@ const server = http.createServer(async (req, res) => {
         const attempt = loginAttempts.get(ip) || { count: 0, until: Date.now() + 15 * 60 * 1000 };
         if (attempt.until < Date.now()) { attempt.count = 0; attempt.until = Date.now() + 15 * 60 * 1000; }
         if (attempt.count >= 8) fail(429, 'Trop de tentatives. Réessayez dans 15 minutes.');
+        // Clean up expired sessions
+        db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(Date.now());
         const row = db.prepare('SELECT user_id, salt, password_hash FROM credentials WHERE email = ? COLLATE NOCASE').get(email);
         const candidate = row ? hashPassword(password, row.salt).hash : crypto.pbkdf2Sync(password, 'shop-kosomba-login-padding', 210000, 32, 'sha256').toString('hex');
         const valid = row && crypto.timingSafeEqual(Buffer.from(candidate, 'hex'), Buffer.from(row.password_hash, 'hex'));
         const user = valid ? getState().users.find(item => item.id === row.user_id && item.active) : null;
         if (!user) { attempt.count++; loginAttempts.set(ip, attempt); fail(401, 'E-mail ou mot de passe incorrect.'); }
         loginAttempts.delete(ip);
+        // Reject login if this account already has an active session
+        const existingSession = db.prepare('SELECT token_hash FROM sessions WHERE user_id = ? AND expires_at > ?').get(user.id, Date.now());
+        if (existingSession) fail(409, 'Ce compte est déjà connecté avec un autre utilisateur. L\'autre session doit être déconnectée d\'abord.');
         startSession(user.id, res, req);
         send(res, 200, { user: safeUser(user) });
         return;
@@ -292,11 +322,13 @@ const server = http.createServer(async (req, res) => {
         const changes = {
           products: !deepEqual(incoming.products, existing.products),
           documents: !deepEqual(incoming.documents, existing.documents),
-          users: !deepEqual(incoming.users, existing.users)
+          users: !deepEqual(incoming.users, existing.users),
+          clients: !deepEqual(incoming.clients, existing.clients || [])
         };
         if (changes.products && !actor.permissions.includes('Stock')) fail(403, 'Permission Stock requise.');
         if (changes.documents && !actor.permissions.includes('Ventes')) fail(403, 'Permission Ventes requise.');
         if (changes.users && !actor.permissions.includes('Utilisateurs')) fail(403, 'Permission Utilisateurs requise.');
+        if (changes.clients && !actor.permissions.includes('Factures') && !actor.permissions.includes('Ventes')) fail(403, 'Permission Factures ou Ventes requise.');
         const passwords = body.passwords || {};
         const oldById = new Map(existing.users.map(user => [user.id, user]));
         const newById = new Map(incoming.users.map(user => [user.id, user]));

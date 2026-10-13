@@ -3,5 +3,7 @@ node_modules/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+*.db
 important.txt
 add_charts.js
+ACTUELLE MARCHANDISE.xlsx
