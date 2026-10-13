@@ -259,9 +259,8 @@ const server = http.createServer(async (req, res) => {
         const user = valid ? getState().users.find(item => item.id === row.user_id && item.active) : null;
         if (!user) { attempt.count++; loginAttempts.set(ip, attempt); fail(401, 'E-mail ou mot de passe incorrect.'); }
         loginAttempts.delete(ip);
-        // Reject login if this account already has an active session
-        const existingSession = db.prepare('SELECT token_hash FROM sessions WHERE user_id = ? AND expires_at > ?').get(user.id, Date.now());
-        if (existingSession) fail(409, 'Ce compte est déjà connecté avec un autre utilisateur. L\'autre session doit être déconnectée d\'abord.');
+        // Automatically replace any existing session for this user so they don't get locked out
+        db.prepare('DELETE FROM sessions WHERE user_id = ?').run(user.id);
         startSession(user.id, res, req);
         send(res, 200, { user: safeUser(user) });
         return;
