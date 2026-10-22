@@ -2,16 +2,13 @@ services:
   - type: web
     name: shop-kosomba
     runtime: node
-    plan: starter
-    buildCommand: echo "No build step needed"
+    plan: free
+    buildCommand: echo "Ready"
     startCommand: node server.js
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
         value: 22.12.0
       - key: SHOP_DATA_DIR
-        value: /opt/render/project/src/.data
-    disk:
-      name: shop-data
-      mountPath: /opt/render/project/src/.data
-      sizeGB: 1
+        value: ./.data
+
