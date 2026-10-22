@@ -137,8 +137,8 @@ function cleanState(input) {
   if (new Set(users.map(u => u.id)).size !== users.length || new Set(users.map(u => u.email)).size !== users.length) fail(409, 'Identifiant ou adresse e-mail déjà utilisé.');
   if (users.filter(u => u.active && u.permissions.includes('Utilisateurs')).length === 0) fail(400, 'Au moins un compte actif doit conserver la permission Utilisateurs.');
   const documents = input.documents.map(doc => {
-    if (!doc.id || !['Facture', 'Ticket', 'Proforma'].includes(doc.type) || !Array.isArray(doc.items) || !Number.isFinite(Number(doc.total)) || Number(doc.total) < 0) fail(400, 'Document invalide.');
-    return { id: String(doc.id), type: doc.type, date: String(doc.date), client: String(doc.client || ''), clientPhone: String(doc.clientPhone || ''), clientAddress: String(doc.clientAddress || ''), total: Number(doc.total), status: String(doc.status || ''), payment: String(doc.payment || ''), items: doc.items.map(item => ({ name: String(item.name), qty: Number(item.qty), price: Number(item.price) })) };
+    if (!doc.id || !['Facture', 'Ticket', 'Proforma', 'Avoir'].includes(doc.type) || !Array.isArray(doc.items) || !Number.isFinite(Number(doc.total))) fail(400, 'Document invalide.');
+    return { id: String(doc.id), type: doc.type, date: String(doc.date), client: String(doc.client || ''), clientPhone: String(doc.clientPhone || ''), clientAddress: String(doc.clientAddress || ''), total: Number(doc.total), discount: Number(doc.discount || 0), status: String(doc.status || ''), payment: String(doc.payment || ''), items: doc.items.map(item => ({ name: String(item.name), qty: Number(item.qty), price: Number(item.price) })) };
   });
   const clients = Array.isArray(input.clients) ? input.clients.map(c => ({
     id: String(c.id || ('c' + Date.now())),
@@ -150,8 +150,20 @@ function cleanState(input) {
     notes: String(c.notes || '').trim(),
     createdAt: String(c.createdAt || new Date().toISOString())
   })).filter(c => c.name.length > 0) : [];
+  const expenses = Array.isArray(input.expenses) ? input.expenses.map(e => {
+    if (!e.nature || !String(e.nature).trim()) fail(400, 'La nature de la dépense est obligatoire.');
+    return {
+      id: String(e.id || ('exp_' + Date.now())),
+      nature: String(e.nature).trim(),
+      amount: Math.abs(Number(e.amount) || 0),
+      date: String(e.date || new Date().toISOString()),
+      payment: String(e.payment || 'Espèce'),
+      description: String(e.description || '').trim(),
+      recordedBy: String(e.recordedBy || '')
+    };
+  }) : [];
   const activity = input.activity.slice(0, 100).map(item => ({ text: String(item.text || '').replace(/<[^>]*>/g, '').slice(0, 500), date: String(item.date || new Date().toISOString()), icon: String(item.icon || 'circle-dot') }));
-  return { products, users, documents, clients, activity };
+  return { products, users, documents, clients, expenses, activity };
 }
 
 const loginAttempts = new Map();
