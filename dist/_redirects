@@ -1,1 +1,3 @@
+/api/*  https://shop-kosomba.onrender.com/api/:splat  200
+/images/*  https://shop-kosomba.onrender.com/images/:splat  200
 /*    /index.html   200
