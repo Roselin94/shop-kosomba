@@ -2081,13 +2081,29 @@ async function processProductReturn(docId){
 function convertProforma(id){if(!can('Ventes')||!can('Stock'))return toast('Permissions Ventes et Stock requises.',true);const proforma=state.documents.find(d=>d.id===id);if(!proforma||proforma.type!=='Proforma')return toast('Proforma introuvable.',true);if(!confirm(`Convertir ${proforma.id} en facture définitive ?\nLe stock sera déduit.`))return;const pm=prompt('Mode de paiement (Espèce / Momo / Avance) :','Espèce');if(!pm)return;const payment=['Espèce','Momo','Avance'].includes(pm)?pm:'Espèce';let sequence=String(state.documents.filter(d=>d.type==='Facture').length+1).padStart(4,'0');const facture={id:`FAC-${new Date().getFullYear()}-${sequence}`,type:'Facture',date:new Date().toISOString(),client:proforma.client,clientPhone:proforma.clientPhone||'',clientWhatsapp:proforma.clientWhatsapp||'',clientAddress:proforma.clientAddress||'',subtotal:proforma.subtotal??proforma.total,discount:proforma.discount||0,discountType:proforma.discountType||'amount',total:proforma.total,status:payment==='Avance'?'Avance':'Payée',payment,items:[...proforma.items]};for(const item of facture.items){let p=state.products.find(x=>x.name===item.name);if(p){if(p.stock<item.qty)return toast(`Stock insuffisant pour ${item.name}.`,true);p.stock-=item.qty}}proforma.status='Convertie';state.documents.unshift(facture);log(`Proforma ${proforma.id} convertie en facture <strong>${facture.id}</strong>.`,'file-check');save().then(ok=>{if(ok){render();showDocument(facture.id);toast(`Facture ${facture.id} créée à partir de ${proforma.id}`)}})}
 
 let printInProgress=false;
-function printDocument(){
+let printButtonInProgress=null;
+function releasePrintLock(){
+  printInProgress=false;
+  if(printButtonInProgress){
+    printButtonInProgress.disabled=false;
+    printButtonInProgress.removeAttribute('aria-busy');
+    printButtonInProgress=null;
+  }
+}
+window.addEventListener('afterprint',releasePrintLock);
+function printDocument(button){
   if(printInProgress)return;
   printInProgress=true;
+  printButtonInProgress=button;
+  if(button){
+    button.disabled=true;
+    button.setAttribute('aria-busy','true');
+  }
   try{
     window.print();
-  }finally{
-    window.setTimeout(()=>{printInProgress=false},1500);
+  }catch(error){
+    releasePrintLock();
+    throw error;
   }
 }
 
@@ -2269,7 +2285,7 @@ function showDocument(id){
      ${isProforma&&d.status!=='Convertie'?`<button class="button" onclick="closeModal();convertProforma('${d.id}')">${icon('file-check')} Convertir en facture</button>`:''}
      ${isProforma?`<button class="button" style="border-color:#86efac;background:#f0fdf4;color:#15803d" onclick="closeModal();restockFromProforma('${d.id}')">${icon('package-plus')} Réapprovisionner le stock</button>`:''}
      ${['Facture','Ticket'].includes(d.type)?`<button class="button" style="color:var(--red);border-color:#fca5a5;background:#fef2f2" onclick="closeModal();openProductReturn('${d.id}')">${icon('undo-2')} Retour produit</button>`:''}
-     <button class="button primary" onclick="printDocument()">${icon('printer')} Imprimer</button>`,
+     <button class="button primary" onclick="printDocument(this)">${icon('printer')} Imprimer</button>`,
     !isTicket
   );
 }
