@@ -159,7 +159,7 @@
       .btn-action{padding:5px 7px}
       .products-table th,.products-table td{padding:9px 9px}
     }
-  .auth-form button.primary{background:#16a34a;border-color:#16a34a;color:#fff}.auth-form button.primary:hover{background:#15803d}.bottom-nav{display:none}.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,35,24,0.55);z-index:14;animation:fade .2s ease}.sidebar-overlay.visible{display:block}.cart-toggle-hint{display:none}@keyframes slideup{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@media(max-width:480px){.stats{grid-template-columns:1fr 1fr;gap:8px}.stat-card{padding:12px 13px}.stat-value{font-size:18px;margin-top:10px}.page-head h1{font-size:20px}.topbar{height:56px}.content{padding:14px 10px 72px}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px}.catalog-art{height:88px}.toolbar{padding:10px 12px}.panel-head{padding:13px 14px}td,th{padding:10px 12px}.bottom-nav{height:56px}.notification-panel{width:calc(100vw - 16px);right:-8px}}</style>
+  .auth-form button.primary{background:#16a34a;border-color:#16a34a;color:#fff}.auth-form button.primary:hover{background:#15803d}.bottom-nav{display:none}.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,35,24,0.55);z-index:14;animation:fade .2s ease}.sidebar-overlay.visible{display:block}.cart-toggle-hint{display:none}@keyframes slideup{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@media(max-width:480px){.stats{grid-template-columns:1fr 1fr;gap:8px}.stat-card{padding:12px 13px}.stat-value{font-size:18px;margin-top:10px}.page-head h1{font-size:20px}.topbar{height:56px}.content{padding:14px 10px 72px}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px}.catalog-art{height:88px}.toolbar{padding:10px 12px}.panel-head{padding:13px 14px}td,th{padding:10px 12px}.bottom-nav{height:56px}.notification-panel{width:calc(100vw - 16px);right:-8px}}#content[data-page="dashboard"] .stats{grid-template-columns:repeat(5,minmax(0,1fr))}@media(max-width:1050px){#content[data-page="dashboard"] .stats{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:480px){#content[data-page="dashboard"] .stats{grid-template-columns:repeat(2,minmax(0,1fr))}}</style>
 </head>
 <body>
 <div class="app auth-hidden" id="app-shell">
@@ -584,8 +584,8 @@ function initCharts(retries = 25) {
 
       const salesData = last7Days.map(day => {
         return (state?.documents || [])
-          .filter(doc => new Date(doc.date).toDateString() === day)
-          .reduce((sum, doc) => sum + (Number(doc.total) || 0), 0);
+          .filter(doc => new Date(doc.date).toDateString() === day&&['Ticket','Facture','Avoir'].includes(doc.type))
+          .reduce((sum, doc) => sum + (doc.type==='Avoir'?-1:1)*(Number(doc.total) || 0), 0);
       });
 
       const labels = last7Days.map(day => {
@@ -677,6 +677,16 @@ function render(){
   const content=document.getElementById('content');
   content.dataset.page=currentPage;
   content.innerHTML=`<section class="screen">${({dashboard:dashboardPage,sales:salesPage,products:productsPage,documents:documentsPage,clients:clientsPage,expenses:expensesPage,users:usersPage})[currentPage]()}</section>`;
+  if(currentPage==='dashboard'){
+    const stats=cashStatsForDate(new Date());
+    const salesCard=content.querySelector('.stats>.stat-card:first-child');
+    if(salesCard){
+      salesCard.querySelector('.stat-value').textContent=money(stats.sales);
+      salesCard.querySelector('.stat-foot').textContent=`${stats.count} vente${stats.count===1?'':'s'} · avoirs déduits`;
+    }
+    content.querySelector('.stats')?.insertAdjacentHTML('beforeend',`<article class="stat-card"><div class="stat-top">Bénéfice net du jour <span class="stat-icon">${icon('chart-no-axes-combined')}</span></div><div class="stat-value" style="color:${stats.profit<0?'var(--red)':'var(--main-color-dark)'}">${money(stats.profit)}</div><div class="stat-foot">Prix de vente − prix d’achat · avoirs déduits</div></article>`);
+    content.querySelector('.dashboard-grid')?.insertAdjacentHTML('afterend',productSalesStatsMarkup());
+  }
   if(currentPage==='sales'){
     const query=(document.getElementById('catalog-search')?.value||'').toLowerCase();
     const visibleProducts=state.products.filter(p=>p.stock>0&&(p.name+' '+p.sku+' '+p.barcode).toLowerCase().includes(query));
@@ -700,6 +710,68 @@ function render(){
 function pageHead(title,sub,button=''){const heading=title==='Bonjour Marie'?'Bienvenue chez Shop Kosomba':title;const isDashboard=title==='Bonjour Marie';return `<div class="page-head"><div style="display:flex;align-items:center;gap:14px">${isDashboard?`<div style="width:52px;height:52px;border-radius:10px;background:#fff;border:1px solid var(--line);padding:4px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.05);flex-shrink:0"><img src="/logo.png" alt="Logo" style="width:100%;height:100%;object-fit:contain"></div>`:''}<div><div class="eyebrow">Shop Kosomba · ${new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'long'}).format(new Date())}</div><h1>${heading}</h1><p>${sub}</p></div></div>${button}</div>`}
 function stockBadge(p){return p.stock===0?'<span class="badge danger"><span class="dot"></span>Épuisé</span>':p.stock<=p.threshold?'<span class="badge warn"><span class="dot"></span>Stock bas</span>':'<span class="badge"><span class="dot"></span>En stock</span>'}
 function productCell(p){return `<div class="product-cell"><div class="product-thumb">${p.photo?`<img src="${esc(p.photo)}" alt="">`:icon('package')}</div><div><div class="product-name">${esc(p.name)}</div><div class="subline">${esc(p.sku)} · ${esc(p.category)}</div></div></div>`}
+function productSalesStats(){
+  const soldById=new Map(),soldByName=new Map();
+  const products=state.products||[];
+  for(const doc of state.documents||[]){
+    const isReturn=doc.type==='Avoir';
+    if(!isReturn&&!['Ticket','Facture'].includes(doc.type))continue;
+    for(const item of doc.items||[]){
+      let productId=item.productId;
+      let productName=item.productName||item.name||'';
+      if(isReturn&&!productId){
+        const returnName=String(item.name||'').replace(/^\[RETOUR\]\s*/,'');
+        const product=products.find(p=>returnName.startsWith(`${p.name} (`));
+        if(!product)continue;
+        productId=product.id;
+        productName=product.name;
+      }
+      const quantity=Number(item.qty);
+      if(!Number.isFinite(quantity)||quantity<=0)continue;
+      const counts=productId?soldById:soldByName;
+      const key=productId||productName.trim().toLocaleLowerCase('fr');
+      counts.set(key,(counts.get(key)||0)+quantity*(isReturn?-1:1));
+    }
+  }
+  return products.map(product=>({
+    name:product.name,
+    quantity:Math.max(0,(soldById.get(product.id)||0)+(soldByName.get(product.name.trim().toLocaleLowerCase('fr'))||0))
+  }));
+}
+function productSalesStatsMarkup(){
+  const stats=productSalesStats();
+  const best=[...stats].sort((a,b)=>b.quantity-a.quantity||a.name.localeCompare(b.name,'fr')).slice(0,5);
+  const least=[...stats].sort((a,b)=>a.quantity-b.quantity||a.name.localeCompare(b.name,'fr')).slice(0,5);
+  const rows=items=>items.map(item=>`<div class="low-row"><span>${esc(item.name)}</span><span class="low-num">${item.quantity} vendu${item.quantity>1?'s':''}</span></div>`).join('')||'<div class="empty-state">Aucun produit enregistré.</div>';
+  return `<div class="grid dashboard-grid"><section class="panel"><div class="panel-head"><div><div class="panel-title">Produits les plus vendus</div><div class="panel-subtitle">Quantités nettes sur tout l’historique</div></div></div><div class="low-stock-list">${rows(best)}</div></section><section class="panel"><div class="panel-head"><div><div class="panel-title">Produits les moins vendus</div><div class="panel-subtitle">Les produits sans vente sont inclus</div></div></div><div class="low-stock-list">${rows(least)}</div></section></div>`;
+}
+function documentProfit(doc){
+  if(!['Ticket','Facture','Avoir'].includes(doc.type))return 0;
+  const lineTotals=(doc.items||[]).reduce((totals,item)=>{
+    const quantity=Number(item.qty)||0;
+    const salePrice=Number(item.price)||0;
+    const productName=String(item.productName||item.name||'').replace(/^\[RETOUR\]\s*/,'').toLocaleLowerCase('fr');
+    const product=state.products.find(p=>p.id===item.productId)||state.products.find(p=>p.name.toLocaleLowerCase('fr')===productName)||state.products.find(p=>doc.type==='Avoir'&&productName.startsWith(`${p.name.toLocaleLowerCase('fr')} (`));
+    const purchasePrice=Number(item.cost??product?.cost)||0;
+    totals.sales+=salePrice*quantity;
+    totals.cost+=purchasePrice*quantity;
+    return totals;
+  },{sales:0,cost:0});
+  if(doc.type==='Avoir'){
+    if(Number.isFinite(Number(doc.profit)))return Number(doc.profit);
+    return lineTotals.cost-lineTotals.sales;
+  }
+  return Number(doc.total??lineTotals.sales)-lineTotals.cost;
+}
+function cashStatsForDate(date){
+  const day=date.toDateString();
+  const documents=(state.documents||[]).filter(doc=>new Date(doc.date).toDateString()===day&&['Ticket','Facture','Avoir'].includes(doc.type));
+  return{
+    sales:documents.reduce((sum,doc)=>sum+(doc.type==='Avoir'?-1:1)*(Number(doc.total)||0),0),
+    profit:documents.reduce((sum,doc)=>sum+documentProfit(doc),0),
+    count:documents.filter(doc=>doc.type!=='Avoir').length
+  };
+}
 function dashboardPage(){let today=new Date().toDateString(),todayDocs=state.documents.filter(d=>new Date(d.date).toDateString()===today&&d.type!=='Avoir'),sales=todayDocs.reduce((s,d)=>s+d.total,0),todayExpenses=(state.expenses||[]).filter(e=>new Date(e.date).toDateString()===today).reduce((s,e)=>s+(Number(e.amount)||0),0),low=state.products.filter(p=>p.stock<=p.threshold).sort((a,b)=>a.stock-b.stock),recent=[...state.documents].slice(0,4);return `${pageHead('Bonjour Marie','Voici ce qui se passe dans votre boutique aujourd’hui.',`<button class="button primary" onclick="go('sales')">${icon('plus')} Nouvelle vente</button>`)}<div class="grid stats"><article class="stat-card"><div class="stat-top">Ventes du jour <span class="stat-icon">${icon('chart-no-axes-combined')}</span></div><div class="stat-value">${money(sales)}</div><div class="stat-foot">${todayDocs.length?'<span class="positive">En cours</span>':'Aucune vente aujourd’hui'}</div></article><article class="stat-card"><div class="stat-top">Dépenses du jour <span class="stat-icon">${icon('wallet')}</span></div><div class="stat-value" style="color:${todayExpenses>0?'var(--red)':'inherit'}">${money(todayExpenses)}</div><div class="stat-foot">${todayExpenses>0?`<span style="color:var(--red)">Sorties de caisse</span>`:'Aucune dépense'}</div></article><article class="stat-card"><div class="stat-top">Références en stock <span class="stat-icon">${icon('package-check')}</span></div><div class="stat-value">${state.products.length}</div><div class="stat-foot">${low.length} sous le seuil d’alerte</div></article><article class="stat-card"><div class="stat-top">Valeur du stock <span class="stat-icon">${icon('wallet')}</span></div><div class="stat-value">${money(state.products.reduce((s,p)=>s+p.stock*p.cost,0))}</div><div class="stat-foot">Valorisation au prix d’achat</div></article></div><div class="grid dashboard-grid"><section class="panel"><div class="panel-head"><div class="panel-title">Évolution des ventes (7 derniers jours)</div></div><div style="position:relative; width:100%; height:280px; padding:10px;"><canvas id="salesChart"></canvas></div></section><section class="panel"><div class="panel-head"><div class="panel-title">Top 10 Produits en Stock</div></div><div style="position:relative; width:100%; height:280px; padding:10px;"><canvas id="stockChart"></canvas></div></section></div><div class="grid dashboard-grid"><div><section class="panel"><div class="panel-head"><div><div class="panel-title">Dernières ventes</div><div class="panel-subtitle">Activité récente de la boutique</div></div><button class="text-link" onclick="go('documents')">Tout voir →</button></div><div class="table-wrap"><table><thead><tr><th>Document</th><th>Client</th><th>Date</th><th>Montant</th><th>Statut</th></tr></thead><tbody>${recent.map(d=>`<tr><td><span class="doc-number">${d.id}</span><div class="subline">${d.type}</div></td><td>${esc(d.client)}</td><td>${dateFmt(d.date)}</td><td><strong style="${d.type==='Avoir'?'color:var(--red)':''}">${d.type==='Avoir'?'-':''}${money(d.total)}</strong></td><td><span class="badge">${d.status}</span></td></tr>`).join('')||'<tr><td colspan="5" class="empty-state">Aucune vente pour le moment.</td></tr>'}</tbody></table></div></section><section class="panel low-stock"><div class="panel-head"><div><div class="panel-title">À réapprovisionner</div><div class="panel-subtitle">Produits au seuil d’alerte ou en dessous</div></div><button class="text-link" onclick="go('products')">Gérer le stock →</button></div><div class="low-stock-list">${low.slice(0,4).map(p=>`<div class="low-row"><span>${esc(p.name)}</span><span class="low-num">${p.stock} restant${p.stock>1?'s':''}</span></div>`).join('')||'<div class="empty-state">Tous vos produits sont bien approvisionnés.</div>'}</div></section></div><section class="panel"><div class="panel-head"><div><div class="panel-title">Activité récente</div><div class="panel-subtitle">Les derniers mouvements de la boutique</div></div></div><div class="activity-list">${(state.activity.length?state.activity:[{text:'Bienvenue dans Atelier ! Votre espace est prêt.',date:new Date().toISOString(),icon:'sparkles'},{text:'Vos alertes de stock apparaîtront ici.',date:new Date().toISOString(),icon:'package'}]).slice(0,6).map(a=>`<div class="activity"><div class="activity-mark">${icon(a.icon||'circle-dot')}</div><div><div class="activity-text">${a.text}</div><div class="activity-time">${timeAgo(a.date)}</div></div></div>`).join('')}</div></section></div>`}
 function changeProductsPage(delta){productsPageNum+=delta;render()}
 function goToProductsPage(p){productsPageNum=p;render()}
@@ -821,7 +893,7 @@ function salesPage(){
     <div class="cart-summary">
       <div class="summary-line" style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)">
         <span>Sous-total brut</span>
-        <span>${money(cartSubtotal())}</span>
+        <span id="cart-subtotal">${money(cartSubtotal())}</span>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 0;border-top:1px dashed var(--line);margin-top:4px">
         <label style="font-size:11px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:4px">
@@ -835,15 +907,13 @@ function salesPage(){
           </select>
         </div>
       </div>
-      ${cartDiscountAmount() > 0 ? `
-        <div class="summary-line" style="display:flex;justify-content:space-between;font-size:11px;color:var(--red);font-weight:600">
+      <div id="cart-discount-line" class="summary-line" style="display:${cartDiscountAmount()>0?'flex':'none'};justify-content:space-between;font-size:11px;color:var(--red);font-weight:600">
           <span>Déduction remise</span>
-          <span>-${money(cartDiscountAmount())}</span>
-        </div>
-      ` : ''}
+          <span>-<span id="cart-discount-amount">${money(cartDiscountAmount())}</span></span>
+      </div>
       <div class="summary-line total" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--line)">
         <span>Total net à payer</span>
-        <span style="color:var(--main-color-dark)">${money(totalAmount)}</span>
+        <span id="cart-total" style="color:var(--main-color-dark)">${money(totalAmount)}</span>
       </div>
     </div>
     <div class="cart-controls">
@@ -885,8 +955,8 @@ function salesPage(){
           <button class="${paymentMode==='Avance'?'selected':''}" onclick="setPaymentMode('Avance')">${icon('clock')} Avance</button>
         </div>
       </div>
-      <button class="button primary" style="height:44px;font-size:13px;font-weight:700;margin-top:4px" ${cart.length?'':'disabled'} onclick="checkout()">
-        ${icon('credit-card')} ${saleType==='Proforma'?'Générer proforma':'Encaisser'} (${money(totalAmount)})
+      <button id="checkout-button" class="button primary" style="height:44px;font-size:13px;font-weight:700;margin-top:4px" ${cart.length?'':'disabled'} onclick="checkout()">
+        ${icon('credit-card')} ${saleType==='Proforma'?'Générer proforma':'Encaisser'} (<span id="checkout-total">${money(totalAmount)}</span>)
       </button>
     </div>
   </section>
@@ -1649,11 +1719,17 @@ function cartTotal(){
 function setCartDiscount(val, type){
   cartDiscount = Math.max(0, Number(val)||0);
   if(type) cartDiscountType = type;
-  render();
+  const subtotal=cartSubtotal(),discount=cartDiscountAmount(),total=Math.max(0,subtotal-discount);
+  document.getElementById('cart-subtotal').textContent=money(subtotal);
+  document.getElementById('cart-discount-line').style.display=discount>0?'flex':'none';
+  document.getElementById('cart-discount-amount').textContent=money(discount);
+  document.getElementById('cart-total').textContent=money(total);
+  document.getElementById('checkout-total').textContent=money(total);
 }
 function clearCart(){cart=[];cartDiscount=0;render()}
 function setSaleType(type){saleType=type;render()}
 function setPaymentMode(mode){paymentMode=mode;render()}
+let checkoutInProgress=false;
 function checkout(){
   if(!can('Ventes')||!can('Stock'))return toast('Permissions Ventes et Stock requises.',true);
   if(!cart.length)return;
@@ -1727,6 +1803,16 @@ async function submitQuickClientForCheckout(){
 }
 
 async function finishCheckout(clientObj){
+  if(checkoutInProgress)return;
+  checkoutInProgress=true;
+  try{
+    await completeCheckout(clientObj);
+  }finally{
+    checkoutInProgress=false;
+  }
+}
+
+async function completeCheckout(clientObj){
   let clientName = clientObj ? clientObj.name : 'Client comptoir';
   let clientPhone = clientObj ? (clientObj.whatsapp || clientObj.phone || '') : '';
   let clientWhatsapp = clientObj ? (clientObj.whatsapp || '') : '';
@@ -1750,7 +1836,7 @@ async function finishCheckout(clientObj){
     discountType:cartDiscountType,
     status:statusMap[saleType]||'Payé',
     payment:saleType==='Proforma'?'':paymentMode,
-    items:cart.map(i=>({name:i.name,qty:i.qty,price:i.price}))
+    items:cart.map(i=>({productId:i.id,name:i.name,qty:i.qty,price:i.price,cost:Number(state.products.find(p=>p.id===i.id)?.cost)||0}))
   };
 
   if(saleType!=='Proforma'){
@@ -1953,13 +2039,17 @@ async function processProductReturn(docId){
   }
 
   // 1. Réintégration du stock
-  let p = state.products.find(x => x.name.toLowerCase() === item.name.toLowerCase());
+  let p = state.products.find(x => x.id === item.productId)||state.products.find(x => x.name.toLowerCase() === item.name.toLowerCase());
   if(p){
     p.stock += qty;
   }
 
   // 2. Création de l'avoir / ticket de retour
-  let refundTotal = item.price * qty;
+  const purchasePrice=Number(item.cost??p?.cost)||0;
+  const saleSubtotal=Number(doc.subtotal)||doc.items.reduce((sum,line)=>sum+(Number(line.price)||0)*(Number(line.qty)||0),0);
+  const discountRatio=saleSubtotal>0?Math.max(0,Number(doc.total)||0)/saleSubtotal:1;
+  let refundTotal = item.price * qty * discountRatio;
+  const reversedProfit=(purchasePrice-(Number(item.price)||0)*discountRatio)*qty;
   let seq = String(state.documents.filter(d => d.type === 'Avoir').length + 1).padStart(4, '0');
   let returnDoc = {
     id: `AVOIR-${new Date().getFullYear()}-${seq}`,
@@ -1970,9 +2060,10 @@ async function processProductReturn(docId){
     clientWhatsapp: doc.clientWhatsapp || '',
     clientAddress: doc.clientAddress || '',
     total: refundTotal,
+    profit: reversedProfit,
     status: refundMode === 'Avoir' ? 'Avoir client' : 'Remboursé',
     payment: refundMode,
-    items: [{ name: `[RETOUR] ${item.name} (${reason})`, qty, price: item.price }]
+    items: [{ productId: p?.id||item.productId, productName:item.name, name: `[RETOUR] ${item.name} (${reason})`, qty, price: item.price, cost:purchasePrice }]
   };
 
   state.documents.unshift(returnDoc);
@@ -1987,7 +2078,18 @@ async function processProductReturn(docId){
   }
 }
 
-function convertProforma(id){if(!can('Ventes')||!can('Stock'))return toast('Permissions Ventes et Stock requises.',true);const proforma=state.documents.find(d=>d.id===id);if(!proforma||proforma.type!=='Proforma')return toast('Proforma introuvable.',true);if(!confirm(`Convertir ${proforma.id} en facture définitive ?\nLe stock sera déduit.`))return;const pm=prompt('Mode de paiement (Espèce / Momo / Avance) :','Espèce');if(!pm)return;const payment=['Espèce','Momo','Avance'].includes(pm)?pm:'Espèce';let sequence=String(state.documents.filter(d=>d.type==='Facture').length+1).padStart(4,'0');const facture={id:`FAC-${new Date().getFullYear()}-${sequence}`,type:'Facture',date:new Date().toISOString(),client:proforma.client,clientPhone:proforma.clientPhone||'',clientWhatsapp:proforma.clientWhatsapp||'',clientAddress:proforma.clientAddress||'',total:proforma.total,status:payment==='Avance'?'Avance':'Payée',payment,items:[...proforma.items]};for(const item of facture.items){let p=state.products.find(x=>x.name===item.name);if(p){if(p.stock<item.qty)return toast(`Stock insuffisant pour ${item.name}.`,true);p.stock-=item.qty}}proforma.status='Convertie';state.documents.unshift(facture);log(`Proforma ${proforma.id} convertie en facture <strong>${facture.id}</strong>.`,'file-check');save().then(ok=>{if(ok){render();showDocument(facture.id);toast(`Facture ${facture.id} créée à partir de ${proforma.id}`)}})}
+function convertProforma(id){if(!can('Ventes')||!can('Stock'))return toast('Permissions Ventes et Stock requises.',true);const proforma=state.documents.find(d=>d.id===id);if(!proforma||proforma.type!=='Proforma')return toast('Proforma introuvable.',true);if(!confirm(`Convertir ${proforma.id} en facture définitive ?\nLe stock sera déduit.`))return;const pm=prompt('Mode de paiement (Espèce / Momo / Avance) :','Espèce');if(!pm)return;const payment=['Espèce','Momo','Avance'].includes(pm)?pm:'Espèce';let sequence=String(state.documents.filter(d=>d.type==='Facture').length+1).padStart(4,'0');const facture={id:`FAC-${new Date().getFullYear()}-${sequence}`,type:'Facture',date:new Date().toISOString(),client:proforma.client,clientPhone:proforma.clientPhone||'',clientWhatsapp:proforma.clientWhatsapp||'',clientAddress:proforma.clientAddress||'',subtotal:proforma.subtotal??proforma.total,discount:proforma.discount||0,discountType:proforma.discountType||'amount',total:proforma.total,status:payment==='Avance'?'Avance':'Payée',payment,items:[...proforma.items]};for(const item of facture.items){let p=state.products.find(x=>x.name===item.name);if(p){if(p.stock<item.qty)return toast(`Stock insuffisant pour ${item.name}.`,true);p.stock-=item.qty}}proforma.status='Convertie';state.documents.unshift(facture);log(`Proforma ${proforma.id} convertie en facture <strong>${facture.id}</strong>.`,'file-check');save().then(ok=>{if(ok){render();showDocument(facture.id);toast(`Facture ${facture.id} créée à partir de ${proforma.id}`)}})}
+
+let printInProgress=false;
+function printDocument(){
+  if(printInProgress)return;
+  printInProgress=true;
+  try{
+    window.print();
+  }finally{
+    window.setTimeout(()=>{printInProgress=false},1500);
+  }
+}
 
 function showDocument(id){
   let d=state.documents.find(x=>x.id===id);
@@ -2167,7 +2269,7 @@ function showDocument(id){
      ${isProforma&&d.status!=='Convertie'?`<button class="button" onclick="closeModal();convertProforma('${d.id}')">${icon('file-check')} Convertir en facture</button>`:''}
      ${isProforma?`<button class="button" style="border-color:#86efac;background:#f0fdf4;color:#15803d" onclick="closeModal();restockFromProforma('${d.id}')">${icon('package-plus')} Réapprovisionner le stock</button>`:''}
      ${['Facture','Ticket'].includes(d.type)?`<button class="button" style="color:var(--red);border-color:#fca5a5;background:#fef2f2" onclick="closeModal();openProductReturn('${d.id}')">${icon('undo-2')} Retour produit</button>`:''}
-     <button class="button primary" onclick="window.print()">${icon('printer')} Imprimer</button>`,
+     <button class="button primary" onclick="printDocument()">${icon('printer')} Imprimer</button>`,
     !isTicket
   );
 }
