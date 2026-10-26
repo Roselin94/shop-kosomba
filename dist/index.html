@@ -160,6 +160,7 @@
       .products-table th,.products-table td{padding:9px 9px}
     }
   .auth-form button.primary{background:#16a34a;border-color:#16a34a;color:#fff}.auth-form button.primary:hover{background:#15803d}.bottom-nav{display:none}.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,35,24,0.55);z-index:14;animation:fade .2s ease}.sidebar-overlay.visible{display:block}.cart-toggle-hint{display:none}@keyframes slideup{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}@media(max-width:480px){.stats{grid-template-columns:1fr 1fr;gap:8px}.stat-card{padding:12px 13px}.stat-value{font-size:18px;margin-top:10px}.page-head h1{font-size:20px}.topbar{height:56px}.content{padding:14px 10px 72px}.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px}.catalog-art{height:88px}.toolbar{padding:10px 12px}.panel-head{padding:13px 14px}td,th{padding:10px 12px}.bottom-nav{height:56px}.notification-panel{width:calc(100vw - 16px);right:-8px}}</style>
+  <style>#content[data-page="dashboard"] .stats{grid-template-columns:repeat(5,minmax(0,1fr))}@media(max-width:1050px){#content[data-page="dashboard"] .stats{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:480px){#content[data-page="dashboard"] .stats{grid-template-columns:repeat(2,minmax(0,1fr))}}</style>
 </head>
 <body>
 <div class="app auth-hidden" id="app-shell">
@@ -677,6 +678,13 @@ function render(){
   const content=document.getElementById('content');
   content.dataset.page=currentPage;
   content.innerHTML=`<section class="screen">${({dashboard:dashboardPage,sales:salesPage,products:productsPage,documents:documentsPage,clients:clientsPage,expenses:expensesPage,users:usersPage})[currentPage]()}</section>`;
+  if(currentPage==='dashboard'){
+    const refunds=(state.documents||[]).filter(doc=>doc.type==='Avoir'&&new Date(doc.date).toDateString()===new Date().toDateString());
+    const refundTotal=refunds.reduce((sum,doc)=>sum+(Number(doc.total)||0),0);
+    const refundedTotal=refunds.filter(doc=>doc.payment!=='Avoir').reduce((sum,doc)=>sum+(Number(doc.total)||0),0);
+    const clientCredit=refunds.filter(doc=>doc.payment==='Avoir').reduce((sum,doc)=>sum+(Number(doc.total)||0),0);
+    content.querySelector('.stats')?.insertAdjacentHTML('beforeend',`<article class="stat-card"><div class="stat-top">Avoirs du jour <span class="stat-icon" style="background:#fcebe8;color:var(--red)">${icon('undo-2')}</span></div><div class="stat-value" style="color:var(--red)">${money(refundTotal)}</div><div class="stat-foot">${refunds.length} avoir${refunds.length===1?'':'s'} · Remboursé : ${money(refundedTotal)} · Crédit : ${money(clientCredit)}</div></article>`);
+  }
   if(currentPage==='sales'){
     const query=(document.getElementById('catalog-search')?.value||'').toLowerCase();
     const visibleProducts=state.products.filter(p=>p.stock>0&&(p.name+' '+p.sku+' '+p.barcode).toLowerCase().includes(query));
