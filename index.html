@@ -189,11 +189,45 @@
 <div id="modal-root"></div><div id="toast-root"></div>
 <script>
 let state=null,currentUser=null,stateRevision=0,pendingPasswords={},saveQueue=Promise.resolve(),savingCount=0,pollBusy=false,notifications=[];
-let currentPage='dashboard',cart=[],cartDiscount=0,cartDiscountType='amount',saleType='Ticket',paymentMode='Espèce',selectedClientId='',productFilter='Tous',productsPageNum=0,productsPerPage=10,clientSearchQ='';
+let currentPage='dashboard',cart=[],cartDiscount=0,cartDiscountType='amount',saleType='Ticket',paymentMode='Espèce',selectedClientId='',productFilter='Tous',productsPageNum=0,productsPerPage=10,clientSearchQ='',cashPeriod='day';
 const titles={dashboard:'Vue d’ensemble',sales:'Point de vente',products:'Produits & stocks',documents:'Factures & tickets',clients:'Fichier clients',expenses:'Gestion des dépenses',users:'Équipe & permissions'};
 const money=n=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'XAF',maximumFractionDigits:0}).format(Number(n)||0);
 const dateFmt=d=>new Intl.DateTimeFormat('fr-FR',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(d));
 const timeAgo=d=>{let h=Math.floor((Date.now()-new Date(d))/3600000);return h<1?'À l’instant':h<24?`Il y a ${h} h`:`Il y a ${Math.floor(h/24)} j`};
+function localDate(value){
+  if(typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)){
+    const [year,month,day]=value.split('-').map(Number);
+    return new Date(year,month-1,day);
+  }
+  return new Date(value);
+}
+function cashStatsForPeriod(period,referenceDate=new Date()){
+  const start=new Date(referenceDate);
+  start.setHours(0,0,0,0);
+  if(period==='week')start.setDate(start.getDate()-(start.getDay()+6)%7);
+  else if(period==='month')start.setDate(1);
+  const end=new Date(start);
+  if(period==='week')end.setDate(end.getDate()+7);
+  else if(period==='month')end.setMonth(end.getMonth()+1);
+  else end.setDate(end.getDate()+1);
+  const inPeriod=value=>{
+    const timestamp=localDate(value).getTime();
+    return Number.isFinite(timestamp)&&timestamp>=start.getTime()&&timestamp<end.getTime();
+  };
+  const documents=(state.documents||[]).filter(doc=>inPeriod(doc.date));
+  const cashSales=documents.filter(doc=>['Ticket','Facture'].includes(doc.type)&&doc.payment==='Espèce')
+    .reduce((sum,doc)=>sum+(Number(doc.total)||0),0);
+  const cashRefunds=documents.filter(doc=>doc.type==='Avoir'&&doc.payment==='Espèce')
+    .reduce((sum,doc)=>sum+(Number(doc.total)||0),0);
+  const cashExpenses=(state.expenses||[]).filter(expense=>inPeriod(expense.date)&&(expense.payment||'Espèce')==='Espèce')
+    .reduce((sum,expense)=>sum+(Number(expense.amount)||0),0);
+  return{balance:cashSales-cashRefunds-cashExpenses,sales:cashSales,refunds:cashRefunds,expenses:cashExpenses};
+}
+function setCashPeriod(period){
+  if(!['day','week','month'].includes(period))return;
+  cashPeriod=period;
+  render();
+}
 
 const DEFAULT_USER = {
   id: "u1",
@@ -684,6 +718,9 @@ function render(){
       salesCard.querySelector('.stat-value').textContent=money(stats.sales);
       salesCard.querySelector('.stat-foot').textContent=`${stats.count} vente${stats.count===1?'':'s'} · avoirs déduits`;
     }
+    if(!salesCard)throw new Error('Carte des ventes introuvable sur le tableau de bord.');
+    const drawer=cashStatsForPeriod(cashPeriod);
+    salesCard.insertAdjacentHTML('afterend',`<article class="stat-card"><div class="stat-top">Montant en caisse <span class="stat-icon" style="background:var(--mint);color:var(--main-color-dark)">${icon('wallet')}</span></div><label style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:8px;font-size:10px;color:var(--muted)">Période <select class="filter-select" aria-label="Période du montant en caisse" onchange="setCashPeriod(this.value)" style="height:26px;padding:2px 6px;font-size:10px"><option value="day" ${cashPeriod==='day'?'selected':''}>Aujourd’hui</option><option value="week" ${cashPeriod==='week'?'selected':''}>Cette semaine</option><option value="month" ${cashPeriod==='month'?'selected':''}>Ce mois</option></select></label><div class="stat-value" style="color:${drawer.balance<0?'var(--red)':'var(--main-color-dark)'}">${money(drawer.balance)}</div><div class="stat-foot">Espèces reçues ${money(drawer.sales)} − remboursements ${money(drawer.refunds)} − dépenses ${money(drawer.expenses)}. Hors solde initial.</div></article>`);
     content.querySelector('.stats')?.insertAdjacentHTML('beforeend',`<article class="stat-card"><div class="stat-top">Avoirs du jour <span class="stat-icon" style="background:#fcebe8;color:var(--red)">${icon('undo-2')}</span></div><div class="stat-value" style="color:var(--red)">${money(stats.returns.total)}</div><div class="stat-foot">${stats.returns.count} avoir${stats.returns.count===1?'':'s'} · Remboursé : ${money(stats.returns.refunded)} · Crédit : ${money(stats.returns.credit)}</div></article>`);
     content.querySelector('.stats')?.insertAdjacentHTML('beforeend',`<article class="stat-card"><div class="stat-top">Bénéfice net du jour <span class="stat-icon">${icon('chart-no-axes-combined')}</span></div><div class="stat-value" style="color:${stats.profit<0?'var(--red)':'var(--main-color-dark)'}">${money(stats.profit)}</div><div class="stat-foot">Prix de vente − prix d’achat · avoirs déduits</div></article>`);
     content.querySelector('.dashboard-grid')?.insertAdjacentHTML('afterend',productSalesStatsMarkup());

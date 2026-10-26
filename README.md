@@ -22,6 +22,8 @@ Dans **Point de vente**, l’administrateur peut créer un produit avec son prix
 
 Quand un vendeur enregistre un ticket ou une facture, chaque administrateur actif reçoit une notification persistante dans sa cloche. Le compteur se met à jour automatiquement; ouvrir la notification affiche le document de vente et la marque comme lue.
 
+Le tableau de bord affiche le montant net en caisse pour aujourd’hui, la semaine en cours ou le mois en cours. Il est calculé à partir des ventes réglées en espèces, moins les remboursements et les dépenses payés en espèces; les paiements Momo, virements, chèques et avoirs client sont exclus. Le solde initial de caisse n’étant pas enregistré, ce montant représente les mouvements nets de la période, pas le fonds de caisse de départ.
+
 ## Déploiement Netlify + Render
 
 Netlify héberge l’interface statique du dossier `dist`; l’API Node, la base SQLite et les photos restent hébergées sur Render. Le fichier `dist/_redirects` transmet `/api/*` et `/images/*` au service Render `shop-kosomba`. Si Render attribue une autre URL au service, remplacez `shop-kosomba.onrender.com` dans ce fichier avant le déploiement Netlify.
