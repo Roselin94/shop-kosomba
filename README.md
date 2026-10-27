@@ -24,6 +24,16 @@ Quand un vendeur enregistre un ticket ou une facture, chaque administrateur acti
 
 Le tableau de bord affiche le montant net en caisse pour aujourd’hui, la semaine en cours ou le mois en cours. Il est calculé à partir des ventes réglées en espèces, moins les remboursements et les dépenses payés en espèces; les paiements Momo, virements, chèques et avoirs client sont exclus. Le solde initial de caisse n’étant pas enregistré, ce montant représente les mouvements nets de la période, pas le fonds de caisse de départ.
 
+## Déploiement Vercel + Render
+
+Vercel héberge l’interface statique et Render l’API Node, les données et les photos. À la racine du dépôt, Vercel détecte `vercel.json`, exécute `npm run build` et publie le dossier `dist`. Le script `build.js` copie les fichiers actuels de l’application et ses ressources nécessaires dans ce dossier.
+
+Dans Vercel, importez le dépôt GitHub et conservez les réglages détectés par `vercel.json` : commande de build `npm run build`, dossier de sortie `dist`, sans framework. Les chemins `/api/*` et `/images/*` sont transmis au service Render `shop-kosomba.onrender.com`; les autres chemins servent l’application. Si l’URL Render change, modifiez les deux destinations dans `vercel.json`.
+
+L’interface n’utilise pas de variables d’environnement Vercel : elle communique avec l’API par des chemins relatifs. Après avoir lié le domaine de production Vercel (par exemple `https://shop-kosomba.vercel.app`), ajoutez dans les variables du service Render `APP_ORIGIN` avec **l’origine exacte** du domaine, sans barre oblique finale, puis redéployez Render. Cette valeur autorise les écritures depuis ce domaine; les domaines d’aperçu Vercel ne seront pas autorisés tant qu’ils ne sont pas explicitement configurés.
+
+**Stockage persistant requis :** le service Render doit disposer d’un disque persistant monté sur le chemin indiqué par `SHOP_DATA_DIR` (actuellement `/opt/render/project/src/.data`). Sans disque persistant, SQLite et les photos peuvent être perdus lors d’un redéploiement ou remplacement d’instance. Les disques persistants Render nécessitent un forfait compatible; vérifiez le coût et configurez des sauvegardes avant d’y enregistrer des données commerciales. Ne mettez ni mot de passe ni autre secret dans le code ou dans le build frontend.
+
 ## Déploiement Netlify + Render
 
 Netlify héberge l’interface statique du dossier `dist`; l’API Node, la base SQLite et les photos restent hébergées sur Render. Le fichier `dist/_redirects` transmet `/api/*` et `/images/*` au service Render `shop-kosomba`. Si Render attribue une autre URL au service, remplacez `shop-kosomba.onrender.com` dans ce fichier avant le déploiement Netlify.
