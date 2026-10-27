@@ -138,7 +138,7 @@ function cleanState(input) {
   if (users.filter(u => u.active && u.permissions.includes('Utilisateurs')).length === 0) fail(400, 'Au moins un compte actif doit conserver la permission Utilisateurs.');
   const documents = input.documents.map(doc => {
     if (!doc.id || !['Facture', 'Ticket', 'Proforma', 'Avoir'].includes(doc.type) || !Array.isArray(doc.items) || !Number.isFinite(Number(doc.total))) fail(400, 'Document invalide.');
-    return { id: String(doc.id), type: doc.type, date: String(doc.date), client: String(doc.client || ''), clientPhone: String(doc.clientPhone || ''), clientAddress: String(doc.clientAddress || ''), total: Number(doc.total), discount: Number(doc.discount || 0), status: String(doc.status || ''), payment: String(doc.payment || ''), items: doc.items.map(item => ({ name: String(item.name), qty: Number(item.qty), price: Number(item.price) })) };
+    return { id: String(doc.id), type: doc.type, originalDocumentId: String(doc.originalDocumentId || ''), date: String(doc.date), client: String(doc.client || ''), clientPhone: String(doc.clientPhone || ''), clientAddress: String(doc.clientAddress || ''), total: Number(doc.total), discount: Number(doc.discount || 0), status: String(doc.status || ''), payment: String(doc.payment || ''), items: doc.items.map(item => ({ name: String(item.name), qty: Number(item.qty), price: Number(item.price) })) };
   });
   const clients = Array.isArray(input.clients) ? input.clients.map(c => ({
     id: String(c.id || ('c' + Date.now())),
@@ -310,6 +310,35 @@ const server = http.createServer(async (req, res) => {
         }
         const unread = db.prepare('SELECT COUNT(*) AS count FROM notifications WHERE user_id = ? AND read_at IS NULL').get(user.id).count;
         send(res, 200, { unread });
+        return;
+      }
+      if (req.method === 'POST' && url.pathname === '/api/reset-business') {
+        const actor = requireUser(req);
+        if (actor.role !== 'Administratrice') fail(403, 'La réinitialisation est réservée aux comptes administrateurs.');
+        const body = await readJson(req);
+        const row = getStateRow();
+        if (Number(body.revision) !== row.revision) fail(409, 'Les données ont changé dans une autre session. Actualisez avant de réessayer.', { revision: row.revision });
+        const existing = JSON.parse(row.payload);
+        const resetState = cleanState({
+          ...existing,
+          products: existing.products.map(product => ({ ...product, stock: 0 })),
+          documents: [],
+          expenses: [],
+          activity: [{ text: 'Réinitialisation des ventes, dépenses et stocks', date: new Date().toISOString(), icon: 'rotate-ccw' }, ...existing.activity]
+        });
+        db.exec('BEGIN IMMEDIATE');
+        try {
+          const current = getStateRow();
+          if (current.revision !== row.revision) fail(409, 'Les données ont changé dans une autre session. Actualisez avant de réessayer.', { revision: current.revision });
+          db.prepare('UPDATE app_state SET payload = ?, revision = revision + 1 WHERE id = 1').run(JSON.stringify(resetState));
+          db.prepare('DELETE FROM notifications').run();
+          db.exec('COMMIT');
+        } catch (error) {
+          db.exec('ROLLBACK');
+          throw error;
+        }
+        const saved = getStateRow();
+        send(res, 200, { state: stateFor(actor, JSON.parse(saved.payload)), revision: saved.revision });
         return;
       }
       if (req.method === 'GET' && url.pathname === '/api/state') {
