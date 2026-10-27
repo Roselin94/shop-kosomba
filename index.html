@@ -720,7 +720,7 @@ function render(){
     }
     if(!salesCard)throw new Error('Carte des ventes introuvable sur le tableau de bord.');
     const drawer=cashStatsForPeriod(cashPeriod);
-    salesCard.insertAdjacentHTML('afterend',`<article class="stat-card"><div class="stat-top">Montant en caisse <span class="stat-icon" style="background:var(--mint);color:var(--main-color-dark)">${icon('wallet')}</span></div><label style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:8px;font-size:10px;color:var(--muted)">Période <select class="filter-select" aria-label="Période du montant en caisse" onchange="setCashPeriod(this.value)" style="height:26px;padding:2px 6px;font-size:10px"><option value="day" ${cashPeriod==='day'?'selected':''}>Aujourd’hui</option><option value="week" ${cashPeriod==='week'?'selected':''}>Cette semaine</option><option value="month" ${cashPeriod==='month'?'selected':''}>Ce mois</option></select></label><div class="stat-value" style="color:${drawer.balance<0?'var(--red)':'var(--main-color-dark)'}">${money(drawer.balance)}</div><div class="stat-foot">Espèces reçues ${money(drawer.sales)} − remboursements ${money(drawer.refunds)} − dépenses ${money(drawer.expenses)}. Hors solde initial.</div></article>`);
+    salesCard.insertAdjacentHTML('afterend',`<article class="stat-card"><div class="stat-top">Avoir en caisse <span class="stat-icon" style="background:var(--mint);color:var(--main-color-dark)">${icon('wallet')}</span></div><div class="stat-value" style="color:${stats.balance<0?'var(--red)':'var(--main-color-dark)'}">${money(stats.balance)}</div><div class="stat-foot">Ventes ${money(stats.sales)} − dépenses ${money(stats.expenses)} · Aujourd’hui</div></article><article class="stat-card"><div class="stat-top">Montant en caisse <span class="stat-icon" style="background:var(--mint);color:var(--main-color-dark)">${icon('wallet')}</span></div><label style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:8px;font-size:10px;color:var(--muted)">Période <select class="filter-select" aria-label="Période du montant en caisse" onchange="setCashPeriod(this.value)" style="height:26px;padding:2px 6px;font-size:10px"><option value="day" ${cashPeriod==='day'?'selected':''}>Aujourd’hui</option><option value="week" ${cashPeriod==='week'?'selected':''}>Cette semaine</option><option value="month" ${cashPeriod==='month'?'selected':''}>Ce mois</option></select></label><div class="stat-value" style="color:${drawer.balance<0?'var(--red)':'var(--main-color-dark)'}">${money(drawer.balance)}</div><div class="stat-foot">Espèces reçues ${money(drawer.sales)} − remboursements ${money(drawer.refunds)} − dépenses ${money(drawer.expenses)}. Hors solde initial.</div></article>`);
     content.querySelector('.stats')?.insertAdjacentHTML('beforeend',`<article class="stat-card"><div class="stat-top">Avoirs du jour <span class="stat-icon" style="background:#fcebe8;color:var(--red)">${icon('undo-2')}</span></div><div class="stat-value" style="color:var(--red)">${money(stats.returns.total)}</div><div class="stat-foot">${stats.returns.count} avoir${stats.returns.count===1?'':'s'} · Remboursé : ${money(stats.returns.refunded)} · Crédit : ${money(stats.returns.credit)}</div></article>`);
     content.querySelector('.stats')?.insertAdjacentHTML('beforeend',`<article class="stat-card"><div class="stat-top">Bénéfice net du jour <span class="stat-icon">${icon('chart-no-axes-combined')}</span></div><div class="stat-value" style="color:${stats.profit<0?'var(--red)':'var(--main-color-dark)'}">${money(stats.profit)}</div><div class="stat-foot">Prix de vente − prix d’achat · avoirs déduits</div></article>`);
     content.querySelector('.dashboard-grid')?.insertAdjacentHTML('afterend',productSalesStatsMarkup());
@@ -805,8 +805,13 @@ function cashStatsForDate(date){
   const day=date.toDateString();
   const documents=(state.documents||[]).filter(doc=>new Date(doc.date).toDateString()===day&&['Ticket','Facture','Avoir'].includes(doc.type));
   const returns=documents.filter(doc=>doc.type==='Avoir');
+  const expenses=(state.expenses||[]).filter(expense=>new Date(expense.date).toDateString()===day)
+    .reduce((sum,expense)=>sum+(Number(expense.amount)||0),0);
+  const sales=documents.reduce((sum,doc)=>sum+(doc.type==='Avoir'?-1:1)*(Number(doc.total)||0),0);
   return{
-    sales:documents.reduce((sum,doc)=>sum+(doc.type==='Avoir'?-1:1)*(Number(doc.total)||0),0),
+    sales,
+    expenses,
+    balance:sales-expenses,
     profit:documents.reduce((sum,doc)=>sum+documentProfit(doc),0),
     count:documents.filter(doc=>doc.type!=='Avoir').length,
     returns:{
