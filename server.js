@@ -2,7 +2,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { DatabaseSync } = require('node:sqlite');
+const Database = require('better-sqlite3');
 
 const ROOT = __dirname;
 const DATA_DIR = process.env.SHOP_DATA_DIR || path.join(ROOT, '.data');
@@ -19,7 +19,7 @@ const MAX_IMAGE = 5 * 1024 * 1024;
 const IMAGE_DIR = path.join(DATA_DIR, 'images');
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
-const db = new DatabaseSync(DB_PATH);
+const db = new Database(DB_PATH);
 db.exec(`
   PRAGMA journal_mode = WAL;
   PRAGMA foreign_keys = ON;
@@ -433,7 +433,7 @@ const server = http.createServer(async (req, res) => {
     }
     send(res, 404, { error: 'Page introuvable.' });
   } catch (error) {
-    const status = error.status || (error.code === 'ERR_SQLITE_CONSTRAINT_UNIQUE' ? 409 : 500);
+    const status = error.status || (error.code === 'SQLITE_CONSTRAINT_UNIQUE' ? 409 : 500);
     if (status >= 500) console.error(error);
     if (!res.headersSent) send(res, status, { error: status >= 500 ? 'Erreur serveur.' : error.message, ...(error.extra || {}) });
     else res.destroy();

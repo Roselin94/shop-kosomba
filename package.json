@@ -4,10 +4,13 @@
   "private": true,
   "description": "Gestion commerciale et stock de Shop Kosomba",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=18.0.0"
   },
   "scripts": {
     "build": "node build.js",
     "start": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0"
   }
 }
