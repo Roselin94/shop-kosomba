@@ -121,10 +121,23 @@
     .catalog-stock{font-size:10px;color:var(--muted)}
     .catalog-stock.low,.low-num{color:var(--signal);font-weight:700}
     .catalog-price{font:700 15px Manrope,sans-serif;color:var(--ink)}
+    .grid.stats{gap:14px;align-items:stretch;grid-auto-rows:1fr}
+    .stat-card{display:flex;flex-direction:column;min-width:0;height:100%;padding:18px 18px 16px;border:1px solid var(--line);background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(17,24,39,0.03)}
+    .stat-card .stat-top{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;line-height:1.35;font-weight:700;color:var(--muted);width:100%;min-height:32px}
+    .stat-card .stat-icon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--mint);color:var(--main-color-dark);flex-shrink:0}
+    .stat-card .stat-value{margin-top:18px;font:800 clamp(1.1rem,1.8vw,2rem)/1.05 Manrope,sans-serif;letter-spacing:-.045em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-variant-numeric:tabular-nums;width:100%}
+    .stat-card .stat-foot{margin-top:8px;font-size:11px;line-height:1.45;color:var(--muted);width:100%}
+    .stat-stock-value{font-size:clamp(1.1rem,1.8vw,2rem)!important;letter-spacing:-.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+    .invoice-table tfoot .total-val,.invoice-table tfoot .final-val,.invoice-table .col-tot,.invoice-table td strong,.table-wrap td strong,.table-wrap td .money, .money-value, .amount-value{font-variant-numeric:tabular-nums;letter-spacing:-.03em;white-space:nowrap}
+    #content[data-page="dashboard"] .stats>.stat-card:nth-child(-n+4){min-height:150px}
     #content[data-page="dashboard"] .stats>.stat-card:first-child{background:#213c30;border-color:#213c30;color:#fff}
     #content[data-page="dashboard"] .stats>.stat-card:first-child .stat-top,#content[data-page="dashboard"] .stats>.stat-card:first-child .stat-foot{color:#d3e2d5}
     #content[data-page="dashboard"] .stats>.stat-card:first-child .stat-icon{background:#365442;color:var(--lime)}
     #content[data-page="dashboard"] .stats>.stat-card:first-child .positive{color:var(--lime)}
+    #content[data-page="dashboard"] .stats>.stat-card.is-strong-green{background:#213c30;border-color:#213c30;color:#fff;box-shadow:0 12px 26px rgba(22,163,74,0.12)}
+    #content[data-page="dashboard"] .stats>.stat-card.is-strong-green .stat-top,#content[data-page="dashboard"] .stats>.stat-card.is-strong-green .stat-foot{color:#d3e2d5}
+    #content[data-page="dashboard"] .stats>.stat-card.is-strong-green .stat-icon{background:#365442;color:var(--lime)}
+    #content[data-page="dashboard"] .stats>.stat-card.is-strong-green .stat-value{color:#fff}
     @media(max-width:720px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:10px}.catalog-art{height:100px}.catalog-item{min-height:0}.catalog-info{padding:9px 10px 10px}.catalog-name{min-height:30px;font-size:11px}.catalog-price{font-size:12px}.catalog-meta{gap:4px}.cart-panel .panel-head{padding:12px 15px}.cart-summary{padding:9px 15px}.catalog{padding-bottom:60px}}
     @media(max-width:720px){.auth-screen{grid-template-columns:1fr;min-height:100dvh}.auth-brand{padding:24px;min-height:160px;gap:16px;flex-direction:row;align-items:center;flex-wrap:wrap}.auth-brand h1{font-size:24px;margin:0}.auth-brand p{display:none}.auth-address{display:none}.auth-content{padding:28px 20px;align-items:start}.auth-form-wrap{width:100%}.auth-form-wrap h2{font-size:22px}}
     @media(max-width:720px){.dashboard-grid>div,.dashboard-grid>.panel{min-width:0;width:100%}.dashboard-grid .table-wrap{max-width:100%;overflow-x:auto}}
@@ -793,8 +806,8 @@ function render(){
       salesCard.querySelector('.stat-foot').textContent=`${stats.count} vente${stats.count===1?'':'s'} · avoirs déduits · ${rangeLabel}`;
     }
     if(!salesCard)throw new Error('Carte des ventes introuvable sur le tableau de bord.');
-    content.querySelector('.stats')?.insertAdjacentHTML('beforeend',`<article class="stat-card"><div class="stat-top">Avoir en caisse <span class="stat-icon" style="background:var(--mint);color:var(--main-color-dark)">${icon('wallet')}</span></div><div class="stat-value" style="color:${stats.balance<0?'var(--red)':'var(--main-color-dark)'}">${money(stats.balance)}</div><div class="stat-foot">Ventes ${money(stats.sales)} − dépenses ${money(stats.expenses)} · ${rangeLabel}</div></article>`);
-    content.querySelector('.stats')?.insertAdjacentHTML('beforeend',`<article class="stat-card"><div class="stat-top">Avoirs ${periodTitle} <span class="stat-icon" style="background:#fcebe8;color:var(--red)">${icon('undo-2')}</span></div><div class="stat-value" style="color:var(--red)">${money(stats.returns.total)}</div><div class="stat-foot">${stats.returns.count} avoir${stats.returns.count===1?'':'s'} · Remboursé : ${money(stats.returns.refunded)} · Crédit : ${money(stats.returns.credit)}</div></article>`);
+    content.querySelector('.stats')?.insertAdjacentHTML('beforeend',`<article class="stat-card is-strong-green"><div class="stat-top">Avoir en caisse <span class="stat-icon">${icon('wallet')}</span></div><div class="stat-value" style="color:${stats.balance<0?'var(--red)':'#fff'}">${money(stats.balance)}</div><div class="stat-foot">Ventes ${money(stats.sales)} − dépenses ${money(stats.expenses)} · ${rangeLabel}</div></article>`);
+    content.querySelector('.stats')?.insertAdjacentHTML('beforeend',`<article class="stat-card"><div class="stat-top">Remboursement ${periodTitle} <span class="stat-icon" style="background:#fcebe8;color:var(--red)">${icon('undo-2')}</span></div><div class="stat-value" style="color:var(--red)">${money(stats.returns.total)}</div><div class="stat-foot">${stats.returns.count} avoir${stats.returns.count===1?'':'s'} · Remboursé : ${money(stats.returns.refunded)} · Crédit : ${money(stats.returns.credit)}</div></article>`);
     content.querySelector('.stats')?.insertAdjacentHTML('beforeend',`<article class="stat-card"><div class="stat-top">Bénéfice net ${periodTitle} <span class="stat-icon">${icon('chart-no-axes-combined')}</span></div><div class="stat-value" style="color:${stats.profit<0?'var(--red)':'var(--main-color-dark)'}">${money(stats.profit)}</div><div class="stat-foot">Prix de vente − prix d’achat · avoirs déduits · ${rangeLabel}</div></article>`);
     const expensesCard=content.querySelectorAll('.stats>.stat-card')[1];
     if(expensesCard)expensesCard.querySelector('.stat-top').firstChild.textContent=`Dépenses ${periodTitle}`;

@@ -3,12 +3,12 @@ services:
     name: shop-kosomba
     runtime: node
     plan: free
-    buildCommand: echo "Ready"
+    buildCommand: npm install
     startCommand: node server.js
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
-        value: 22.12.0
+        value: 20.18.0
       - key: SHOP_DATA_DIR
-        value: ./.data
+        value: /opt/render/project/src/.data
 
