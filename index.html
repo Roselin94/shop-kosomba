@@ -110,6 +110,7 @@
     .notification-wrap{position:relative}.notification-count{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#b84339;color:#fff;font-size:10px;font-weight:700;line-height:18px;text-align:center;border:2px solid #fff}.notification-panel{position:absolute;right:0;top:44px;z-index:15;width:min(360px,calc(100vw - 28px));max-height:min(65vh,520px);overflow:auto;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);color:var(--ink)}.notification-head{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff}.notification-head strong{font:700 13px Manrope,sans-serif}.notification-list{padding:4px 12px}.notification-row{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:start;gap:10px;padding:12px 4px;border-bottom:1px solid #f0f1ed;cursor:pointer}.notification-row:last-child{border:0}.notification-row:hover{background:#fafbf9}.notification-row.unread .notification-title{font-weight:700}.notification-mark{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:var(--main-color);background:var(--mint)}.notification-mark svg{width:15px}.notification-title{font-size:11px;line-height:1.45}.notification-detail{font-size:10px;color:var(--muted);margin-top:3px}.notification-time{white-space:nowrap;font-size:9px;color:#929b93;margin-top:2px}.notification-empty{padding:24px 16px;text-align:center;color:var(--muted);font-size:11px}.notification-read-all{border:0;background:transparent;color:var(--main-color);font-size:10px;font-weight:600;padding:6px}
     .photo-picker{display:grid;grid-template-columns:88px minmax(0,1fr);align-items:center;gap:13px}.photo-preview{height:88px;width:88px;border:1px solid var(--line);border-radius:7px;background:#f1f3ee;color:#758579;display:grid;place-items:center;overflow:hidden}.photo-preview img,.product-thumb img,.catalog-art img{width:100%;height:100%;object-fit:cover}.photo-preview img{border-radius:inherit}.photo-preview svg{width:24px;height:24px}.product-thumb,.catalog-art{overflow:hidden}.photo-picker input{font-size:11px;max-width:100%}
     :root{--signal:#d76743}
+    .stat-stock-value{font-size:21px;letter-spacing:-.035em;white-space:nowrap;max-width:100%;overflow:hidden}
     .catalog-grid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:14px;padding:17px}
     .catalog-item{display:flex;flex-direction:column;overflow:hidden;padding:0;min-height:0;border-radius:8px}
     .catalog-art{height:142px;width:100%;flex:none;border-radius:0;margin:0;background:#edf1eb;color:var(--main-color)}
@@ -189,7 +190,7 @@
 <div id="modal-root"></div><div id="toast-root"></div>
 <script>
 let state=null,currentUser=null,stateRevision=0,pendingPasswords={},saveQueue=Promise.resolve(),savingCount=0,pollBusy=false,notifications=[];
-let currentPage='dashboard',cart=[],cartDiscount=0,cartDiscountType='amount',saleType='Ticket',paymentMode='Espèce',selectedClientId='',productFilter='Tous',productsPageNum=0,productsPerPage=10,clientSearchQ='',cashPeriod='day',dashboardDateFrom='',dashboardDateTo='';
+let currentPage='dashboard',cart=[],cartDiscount=0,cartDiscountType='amount',saleType='Ticket',paymentMode='Espèce',selectedClientId='',productFilter='Tous',productsPageNum=0,productsPerPage=10,clientSearchQ='',dashboardDateFrom='',dashboardDateTo='';
 const titles={dashboard:'Vue d’ensemble',sales:'Point de vente',products:'Produits & stocks',documents:'Factures & tickets',clients:'Fichier clients',expenses:'Gestion des dépenses',users:'Équipe & permissions'};
 const money=n=>new Intl.NumberFormat('fr-FR',{style:'currency',currency:'XAF',maximumFractionDigits:0}).format(Number(n)||0);
 const dateFmt=d=>new Intl.DateTimeFormat('fr-FR',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(d));
@@ -256,34 +257,6 @@ function resetDashboardDateRange(){
   dashboardDateTo=dashboardDateFrom;
   render();
 }
-function cashStatsForPeriod(period,referenceDate=new Date()){
-  const start=new Date(referenceDate);
-  start.setHours(0,0,0,0);
-  if(period==='week')start.setDate(start.getDate()-(start.getDay()+6)%7);
-  else if(period==='month')start.setDate(1);
-  const end=new Date(start);
-  if(period==='week')end.setDate(end.getDate()+7);
-  else if(period==='month')end.setMonth(end.getMonth()+1);
-  else end.setDate(end.getDate()+1);
-  const inPeriod=value=>{
-    const timestamp=localDate(value).getTime();
-    return Number.isFinite(timestamp)&&timestamp>=start.getTime()&&timestamp<end.getTime();
-  };
-  const documents=(state.documents||[]).filter(doc=>inPeriod(doc.date));
-  const cashSales=documents.filter(doc=>['Ticket','Facture'].includes(doc.type)&&doc.payment==='Espèce')
-    .reduce((sum,doc)=>sum+(Number(doc.total)||0),0);
-  const cashRefunds=documents.filter(doc=>doc.type==='Avoir'&&doc.payment==='Espèce')
-    .reduce((sum,doc)=>sum+(Number(doc.total)||0),0);
-  const cashExpenses=(state.expenses||[]).filter(expense=>inPeriod(expense.date)&&(expense.payment||'Espèce')==='Espèce')
-    .reduce((sum,expense)=>sum+(Number(expense.amount)||0),0);
-  return{balance:cashSales-cashRefunds-cashExpenses,sales:cashSales,refunds:cashRefunds,expenses:cashExpenses};
-}
-function setCashPeriod(period){
-  if(!['day','week','month'].includes(period))return;
-  cashPeriod=period;
-  render();
-}
-
 const DEFAULT_USER = {
   id: "u1",
   name: "Amour BOBOMA",
@@ -820,8 +793,7 @@ function render(){
       salesCard.querySelector('.stat-foot').textContent=`${stats.count} vente${stats.count===1?'':'s'} · avoirs déduits · ${rangeLabel}`;
     }
     if(!salesCard)throw new Error('Carte des ventes introuvable sur le tableau de bord.');
-    const drawer=cashStatsForPeriod(cashPeriod);
-    content.querySelector('.stats')?.insertAdjacentHTML('beforeend',`<article class="stat-card"><div class="stat-top">Avoir en caisse <span class="stat-icon" style="background:var(--mint);color:var(--main-color-dark)">${icon('wallet')}</span></div><div class="stat-value" style="color:${stats.balance<0?'var(--red)':'var(--main-color-dark)'}">${money(stats.balance)}</div><div class="stat-foot">Ventes ${money(stats.sales)} − dépenses ${money(stats.expenses)} · ${rangeLabel}</div></article><article class="stat-card"><div class="stat-top">Montant en caisse <span class="stat-icon" style="background:var(--mint);color:var(--main-color-dark)">${icon('wallet')}</span></div><label style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:8px;font-size:10px;color:var(--muted)">Période <select class="filter-select" aria-label="Période du montant en caisse" onchange="setCashPeriod(this.value)" style="height:26px;padding:2px 6px;font-size:10px"><option value="day" ${cashPeriod==='day'?'selected':''}>Aujourd’hui</option><option value="week" ${cashPeriod==='week'?'selected':''}>Cette semaine</option><option value="month" ${cashPeriod==='month'?'selected':''}>Ce mois</option></select></label><div class="stat-value" style="color:${drawer.balance<0?'var(--red)':'var(--main-color-dark)'}">${money(drawer.balance)}</div><div class="stat-foot">Espèces reçues ${money(drawer.sales)} − remboursements ${money(drawer.refunds)} − dépenses ${money(drawer.expenses)}. Hors solde initial.</div></article>`);
+    content.querySelector('.stats')?.insertAdjacentHTML('beforeend',`<article class="stat-card"><div class="stat-top">Avoir en caisse <span class="stat-icon" style="background:var(--mint);color:var(--main-color-dark)">${icon('wallet')}</span></div><div class="stat-value" style="color:${stats.balance<0?'var(--red)':'var(--main-color-dark)'}">${money(stats.balance)}</div><div class="stat-foot">Ventes ${money(stats.sales)} − dépenses ${money(stats.expenses)} · ${rangeLabel}</div></article>`);
     content.querySelector('.stats')?.insertAdjacentHTML('beforeend',`<article class="stat-card"><div class="stat-top">Avoirs ${periodTitle} <span class="stat-icon" style="background:#fcebe8;color:var(--red)">${icon('undo-2')}</span></div><div class="stat-value" style="color:var(--red)">${money(stats.returns.total)}</div><div class="stat-foot">${stats.returns.count} avoir${stats.returns.count===1?'':'s'} · Remboursé : ${money(stats.returns.refunded)} · Crédit : ${money(stats.returns.credit)}</div></article>`);
     content.querySelector('.stats')?.insertAdjacentHTML('beforeend',`<article class="stat-card"><div class="stat-top">Bénéfice net ${periodTitle} <span class="stat-icon">${icon('chart-no-axes-combined')}</span></div><div class="stat-value" style="color:${stats.profit<0?'var(--red)':'var(--main-color-dark)'}">${money(stats.profit)}</div><div class="stat-foot">Prix de vente − prix d’achat · avoirs déduits · ${rangeLabel}</div></article>`);
     const expensesCard=content.querySelectorAll('.stats>.stat-card')[1];
@@ -838,6 +810,7 @@ function render(){
       body.querySelectorAll('[data-dashboard-document]').forEach(button=>button.addEventListener('click',()=>showDocument(button.dataset.dashboardDocument)));
     }
     content.querySelector('.dashboard-grid')?.insertAdjacentHTML('afterend',productSalesStatsMarkup());
+    fitStockValue(content.querySelector('.stat-stock-value'));
   }
   if(currentPage==='sales'){
     const query=(document.getElementById('catalog-search')?.value||'').toLowerCase();
@@ -859,6 +832,24 @@ function render(){
   updateBadges();
   if(window.lucide)lucide.createIcons();
 }
+function fitStockValue(value){
+  if(!value)return;
+  const minSize=8,maxSize=21;
+  let low=minSize,high=maxSize;
+  value.style.fontSize=`${maxSize}px`;
+  if(!value.clientWidth)return;
+  if(value.scrollWidth<=value.clientWidth)return;
+  for(let i=0;i<8;i++){
+    const size=(low+high)/2;
+    value.style.fontSize=`${size}px`;
+    if(value.scrollWidth<=value.clientWidth)low=size;
+    else high=size;
+  }
+  value.style.fontSize=`${low}px`;
+}
+window.addEventListener('resize',()=>{
+  fitStockValue(document.querySelector('#content[data-page="dashboard"] .stat-stock-value'));
+},{passive:true});
 function pageHead(title,sub,button=''){const heading=title==='Bonjour Marie'?'Bienvenue chez Shop Kosomba':title;const isDashboard=title==='Bonjour Marie';return `<div class="page-head"><div style="display:flex;align-items:center;gap:14px">${isDashboard?`<div style="width:52px;height:52px;border-radius:10px;background:#fff;border:1px solid var(--line);padding:4px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.05);flex-shrink:0"><img src="/logo.png" alt="Logo" style="width:100%;height:100%;object-fit:contain"></div>`:''}<div><div class="eyebrow">Shop Kosomba · ${new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'long'}).format(new Date())}</div><h1>${heading}</h1><p>${sub}</p></div></div>${button}</div>`}
 function stockBadge(p){return p.stock===0?'<span class="badge danger"><span class="dot"></span>Épuisé</span>':p.stock<=p.threshold?'<span class="badge warn"><span class="dot"></span>Stock bas</span>':'<span class="badge"><span class="dot"></span>En stock</span>'}
 function productCell(p){return `<div class="product-cell"><div class="product-thumb">${p.photo?`<img src="${esc(p.photo)}" alt="">`:icon('package')}</div><div><div class="product-name">${esc(p.name)}</div><div class="subline">${esc(p.sku)} · ${esc(p.category)}</div></div></div>`}
@@ -936,7 +927,7 @@ function dashboardPage(){
     <article class="stat-card"><div class="stat-top">Ventes ${periodTitle} <span class="stat-icon">${icon('chart-no-axes-combined')}</span></div><div class="stat-value">${money(stats.sales)}</div><div class="stat-foot">${stats.count} vente${stats.count===1?'':'s'} · avoirs déduits · ${rangeLabel}</div></article>
     <article class="stat-card"><div class="stat-top">Dépenses ${periodTitle} <span class="stat-icon">${icon('wallet')}</span></div><div class="stat-value" style="color:${stats.expenses>0?'var(--red)':'inherit'}">${money(stats.expenses)}</div><div class="stat-foot">${rangeLabel}</div></article>
     <article class="stat-card"><div class="stat-top">Références en stock <span class="stat-icon">${icon('package-check')}</span></div><div class="stat-value">${state.products.length}</div><div class="stat-foot">${low.length} sous le seuil d’alerte</div></article>
-    <article class="stat-card"><div class="stat-top">Valeur du stock <span class="stat-icon">${icon('wallet')}</span></div><div class="stat-value">${money(state.products.reduce((s,p)=>s+p.stock*p.cost,0))}</div><div class="stat-foot">Valorisation au prix d’achat</div></article>
+    <article class="stat-card"><div class="stat-top">Valeur du stock <span class="stat-icon">${icon('wallet')}</span></div><div class="stat-value stat-stock-value">${money(state.products.reduce((s,p)=>s+p.stock*p.cost,0))}</div><div class="stat-foot">Valorisation au prix d’achat</div></article>
   </div>
   <div class="grid dashboard-grid"><section class="panel"><div class="panel-head"><div class="panel-title">Évolution des ventes (7 derniers jours)</div></div><div style="position:relative; width:100%; height:280px; padding:10px;"><canvas id="salesChart"></canvas></div></section><section class="panel"><div class="panel-head"><div class="panel-title">Top 10 Produits en Stock</div></div><div style="position:relative; width:100%; height:280px; padding:10px;"><canvas id="stockChart"></canvas></div></section></div>
   <div class="grid dashboard-grid"><div><section class="panel"><div class="panel-head"><div><div class="panel-title">Ventes ${periodTitle}</div><div class="panel-subtitle">${rangeLabel} · ${recent.length} document${recent.length===1?'':'s'}</div></div><button class="text-link" onclick="go('documents')">Tout voir →</button></div><div class="table-wrap"><table><thead><tr><th>Document</th><th>Client</th><th>Date</th><th>Montant</th><th>Statut</th><th></th></tr></thead><tbody>${recent.map(d=>`<tr><td><span class="doc-number">${esc(d.id)}</span><div class="subline">${esc(d.type)}</div></td><td>${esc(d.client)}</td><td>${dateFmt(d.date)}</td><td><strong style="${d.type==='Avoir'?'color:var(--red)':''}">${d.type==='Avoir'?'-':''}${money(d.total)}</strong></td><td><span class="badge">${esc(d.status)}</span></td><td><button class="button" type="button" data-dashboard-document="${esc(d.id)}">Voir</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty-state">Aucune vente sur cette période.</td></tr>'}</tbody></table></div></section>
