@@ -321,10 +321,10 @@ const server = http.createServer(async (req, res) => {
         const existing = JSON.parse(row.payload);
         const resetState = cleanState({
           ...existing,
-          products: existing.products.map(product => ({ ...product, stock: 0 })),
+          products: (existing.products || []).map(product => ({ ...product, stock: 0 })),
           documents: [],
           expenses: [],
-          activity: [{ text: 'Réinitialisation des ventes, dépenses et stocks', date: new Date().toISOString(), icon: 'rotate-ccw' }, ...existing.activity]
+          activity: [{ text: 'Réinitialisation des ventes, dépenses et stocks', date: new Date().toISOString(), icon: 'rotate-ccw' }, ...(existing.activity || [])]
         });
         db.exec('BEGIN IMMEDIATE');
         try {

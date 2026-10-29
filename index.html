@@ -590,6 +590,9 @@ function save(){
   });
   return saveQueue;
 }
+function resetProductsStock(products=[]){
+  return (products || []).map(product => ({ ...product, stock: 0 }));
+}
 function resetBusinessData(){
   if(currentUser?.role!=='Administratrice')return toast('Cette opération est réservée à l’administratrice.',true);
   const productCount=(state.products||[]).length;
@@ -609,7 +612,7 @@ async function performBusinessReset(){
     if(isOfflineMode){
       state.documents=[];
       state.expenses=[];
-      state.products=state.products.map(product=>({...product,stock:0}));
+      state.products=resetProductsStock(state.products);
       state.activity=[{text:'Réinitialisation des ventes, dépenses et stocks',date:new Date().toISOString(),icon:'rotate-ccw'},...(state.activity||[])].slice(0,100);
       if(!await save())return;
       notifications=[];
@@ -622,7 +625,7 @@ async function performBusinessReset(){
     }
     updateNotificationBadge();
     render();
-    toast('Ventes et dépenses supprimées; tous les stocks ont été remis à zéro.');
+    toast('Ventes, dépenses et stocks supprimés; tous les articles ont été remis à zéro.');
   }catch(error){
     toast(error.message,true);
     if(error.status===409)await reloadState();
@@ -2521,10 +2524,45 @@ function showDocument(id){
      ${waBtn}
      ${isProforma&&d.status!=='Convertie'?`<button class="button" onclick="closeModal();convertProforma('${d.id}')">${icon('file-check')} Convertir en facture</button>`:''}
      ${isProforma?`<button class="button" style="border-color:#86efac;background:#f0fdf4;color:#15803d" onclick="closeModal();restockFromProforma('${d.id}')">${icon('package-plus')} Réapprovisionner le stock</button>`:''}
+     ${['Facture','Ticket','Proforma','Avoir'].includes(d.type)?`<button class="button" onclick="closeModal();openDocumentAddressEditor('${d.id}')">${icon('map-pin')} Modifier l’adresse</button>`:''}
      ${['Facture','Ticket'].includes(d.type)?`<button class="button" style="color:var(--red);border-color:#fca5a5;background:#fef2f2" onclick="closeModal();openProductReturn('${d.id}')">${icon('undo-2')} Retour produit</button>`:''}
      <button class="button primary" onclick="printDocument(this)">${icon('printer')} Imprimer</button>`,
     !isTicket
   );
+}
+function openDocumentAddressEditor(id){
+  const doc = state.documents.find(d => d.id === id);
+  if(!doc) return;
+  modal('Modifier l’adresse de facturation', `
+    <div class="modal-body">
+      <div class="field full">
+        <label>Adresse / Quartier / Ville</label>
+        <input id="invoice-address-edit" value="${esc(doc.clientAddress || '')}" placeholder="Ex. Moungali, Brazzaville" autofocus>
+      </div>
+    </div>
+  `, `
+    <button class="button" onclick="closeModal()">Annuler</button>
+    <button class="button primary" onclick="saveDocumentAddress('${id}')">Enregistrer</button>
+  `, true);
+  setTimeout(() => {
+    const input = document.getElementById('invoice-address-edit');
+    if(input) input.focus();
+  }, 60);
+}
+async function saveDocumentAddress(id){
+  const doc = state.documents.find(d => d.id === id);
+  if(!doc) return;
+  const input = document.getElementById('invoice-address-edit');
+  const address = (input ? input.value : '').trim();
+  doc.clientAddress = address;
+  const client = state.clients?.find(c => c.name === doc.client || c.whatsapp === doc.clientPhone || c.whatsapp === doc.clientWhatsapp || c.phone === doc.clientPhone || c.phone === doc.clientWhatsapp);
+  if(client) client.address = address;
+  const ok = await save();
+  if(ok){
+    closeModal();
+    showDocument(id);
+    toast('Adresse de la facture mise à jour');
+  }
 }
 function openUser(id=''){if(!can('Utilisateurs'))return toast('Permission Utilisateurs requise.',true);let u=state.users.find(x=>x.id===id)||{name:'',email:'',role:'Vendeur',permissions:['Ventes','Stock'],active:true},perms=['Ventes','Stock','Factures','Utilisateurs'];modal(id?'Modifier le membre':'Inviter un membre',`<div class="modal-body"><form id="user-form" class="field-grid"><div class="field"><label>Nom complet</label><input name="name" required value="${esc(u.name)}" placeholder="Prénom Nom"></div><div class="field"><label>Adresse e-mail</label><input name="email" type="email" required value="${esc(u.email)}" placeholder="nom@shopkosomba.cg"></div><div class="field"><label>Rôle</label><select name="role" onchange="setRolePermissions(this.value)">${['Administratrice','Vendeur','Gestionnaire de stock','Comptable','Personnalisé'].map(r=>`<option ${u.role===r?'selected':''}>${r}</option>`).join('')}</select></div><div class="field"><label>Statut du compte</label><select name="active"><option value="true" ${u.active?'selected':''}>Actif</option><option value="false" ${!u.active?'selected':''}>Désactivé</option></select></div><div class="field full"><label>${id?'Nouveau mot de passe (facultatif)':'Mot de passe initial (12 caractères minimum)'}</label><input name="password" type="password" ${id?'':'required minlength="12"'} autocomplete="new-password"></div><div class="field full"><label>Permissions d’accès</label><div class="permission-list" id="permission-list">${perms.map(p=>`<label class="permission-option"><input type="checkbox" name="permissions" value="${p}" ${u.permissions.includes(p)?'checked':''}>${p}</label>`).join('')}</div></div></form></div>`,`<button class="button" onclick="closeModal()">Annuler</button><button class="button primary" onclick="saveUser('${id}')">${id?'Enregistrer':'Ajouter le membre'}</button>`,true)}
 function setRolePermissions(role){let sets={'Administratrice':['Ventes','Stock','Factures','Utilisateurs'],'Vendeur':['Ventes','Stock'],'Gestionnaire de stock':['Stock','Factures'],'Comptable':['Factures']},allowed=sets[role];if(!allowed)return;document.querySelectorAll('#permission-list input').forEach(c=>c.checked=allowed.includes(c.value))}
