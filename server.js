@@ -10,7 +10,8 @@ const DB_PATH = path.join(DATA_DIR, 'shop-kosomba.sqlite');
 const PORT = Number(process.env.PORT || 4173);
 const HOST = process.env.HOST || '0.0.0.0';
 const APP_ORIGIN = process.env.APP_ORIGIN || '';
-const PERMISSIONS = new Set(['Ventes', 'Stock', 'Factures', 'Utilisateurs']);
+const { PERMISSIONS: PERMISSION_LIST, normalizePermissions } = require('./permissions');
+const PERMISSIONS = new Set(PERMISSION_LIST);
 const ROLES = new Set(['Administratrice', 'Vendeur', 'Gestionnaire de stock', 'Comptable', 'Personnalisé']);
 const COOKIE = 'shopkosomba_session';
 const SESSION_MS = 12 * 60 * 60 * 1000;
@@ -57,8 +58,8 @@ const hashPassword = (password, salt = crypto.randomBytes(16).toString('hex')) =
   salt,
   hash: crypto.pbkdf2Sync(password, salt, 210000, 32, 'sha256').toString('hex')
 });
-const safeUser = user => ({ id: user.id, name: user.name, email: user.email, role: user.role, permissions: user.permissions });
-const stateFor = (user, state) => user.permissions.includes('Utilisateurs') ? state : { ...state, users: [] };
+const safeUser = user => ({ id: user.id, name: user.name, email: user.email, role: user.role, permissions: normalizePermissions(user.role, user.permissions) });
+const stateFor = (user, state) => normalizePermissions(user.role, user.permissions).includes('Utilisateurs') ? state : { ...state, users: [] };
 
 function send(res, status, payload, headers = {}) {
   const body = Buffer.from(JSON.stringify(payload));
@@ -99,7 +100,8 @@ function currentUser(req) {
   const session = db.prepare('SELECT user_id, expires_at FROM sessions WHERE token_hash = ?').get(hashToken(token));
   if (!session || session.expires_at < Date.now()) return null;
   const user = getState().users.find(item => item.id === session.user_id && item.active);
-  return user || null;
+  if (!user) return null;
+  return { ...user, permissions: normalizePermissions(user.role, user.permissions) };
 }
 function requireUser(req) {
   const user = currentUser(req);
@@ -131,8 +133,10 @@ function cleanState(input) {
   });
   if (new Set(products.map(p => p.id)).size !== products.length || new Set(products.map(p => p.sku.toLowerCase())).size !== products.length) fail(409, 'Identifiant ou référence produit déjà utilisé.');
   const users = input.users.map(user => {
-    if (!user.id || !user.name?.trim() || !user.email?.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email) || !ROLES.has(user.role) || typeof user.active !== 'boolean' || !Array.isArray(user.permissions) || user.permissions.some(p => !PERMISSIONS.has(p))) fail(400, 'Membre ou permissions invalides.');
-    return { id: String(user.id), name: String(user.name).trim(), email: String(user.email).trim().toLowerCase(), role: user.role, permissions: [...new Set(user.permissions)], active: user.active };
+    if (!user.id || !user.name?.trim() || !user.email?.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email) || !ROLES.has(user.role) || typeof user.active !== 'boolean' || !Array.isArray(user.permissions)) fail(400, 'Membre ou permissions invalides.');
+    const permissions = normalizePermissions(user.role, user.permissions);
+    if (permissions.length !== new Set(user.permissions).size || user.permissions.some(p => !PERMISSIONS.has(p))) fail(400, 'Membre ou permissions invalides.');
+    return { id: String(user.id), name: String(user.name).trim(), email: String(user.email).trim().toLowerCase(), role: user.role, permissions, active: user.active };
   });
   if (new Set(users.map(u => u.id)).size !== users.length || new Set(users.map(u => u.email)).size !== users.length) fail(409, 'Identifiant ou adresse e-mail déjà utilisé.');
   if (users.filter(u => u.active && u.permissions.includes('Utilisateurs')).length === 0) fail(400, 'Au moins un compte actif doit conserver la permission Utilisateurs.');

@@ -357,7 +357,7 @@ function showAuth(mode,message=''){
       
       <div class="auth-address">
         ${icon('map-pin')}
-        <span>30, rue Louomo CEG de la paix Moungali · Brazzaville, Congo</span>
+        <span>Congo Brazzaville</span>
       </div>
     </section>
 
@@ -635,6 +635,17 @@ async function performBusinessReset(){
 }
 function updateBadges(){document.getElementById('nav-products').textContent=state.products.length;const low=state.products.filter(p=>p.stock<=p.threshold).length;document.getElementById('notification-button').title=low?`${low} alerte${low>1?'s':''} de stock`: 'Aucune alerte de stock'}
 function icon(name){return `<i data-lucide="${name}"></i>`}
+const ROLE_PERMISSIONS = {
+  Administratrice: ['Ventes', 'Stock', 'Factures', 'Utilisateurs'],
+  Vendeur: ['Ventes'],
+  'Gestionnaire de stock': ['Stock', 'Factures'],
+  Comptable: ['Factures'],
+  Personnalisé: ['Ventes', 'Stock', 'Factures', 'Utilisateurs']
+};
+function normalizeRolePermissions(role, permissions = []) {
+  const allowed = ROLE_PERMISSIONS[role] || [];
+  return [...new Set((permissions || []).filter(permission => allowed.includes(permission)))];
+}
 function can(permission){
   if(!currentUser) return false;
   if(currentUser.role === 'Administratrice' || currentUser.role === 'Admin') return true;
@@ -2365,8 +2376,8 @@ function showDocument(id){
             <img src="/logo.png" alt="Shop Kosomba" style="height:48px;max-width:140px;object-fit:contain">
           </div>
           <h3>Shop Kosomba</h3>
-          <div>30, rue Louomo CEG de la paix Moungali</div>
-          <div>Congo-Brazzaville</div>
+          <div>Brazzaville · Congo</div>
+          <div>Tél : 064317297</div>
           <div style="margin-top:10px;font-weight:700;color:${headerColor}">TICKET ${d.id}</div>
           <div>${dateFmt(d.date)} · ${new Date(d.date).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
           <div>Client : <strong>${esc(d.client)}</strong></div>
@@ -2410,9 +2421,8 @@ function showDocument(id){
               </div>
             </div>
             <div style="color:var(--muted);font-size:11px;line-height:1.5">
-              30, rue Louomo CEG de la paix Moungali<br>
-              Brazzaville · République du Congo<br>
-              Tél : +242 06 999 00 00 / WhatsApp : +242 06 999 00 00
+              Brazzaville · Congo<br>
+              Tél : 064317297
             </div>
           </div>
           <div class="invoice-meta-box">
@@ -2564,9 +2574,9 @@ async function saveDocumentAddress(id){
     toast('Adresse de la facture mise à jour');
   }
 }
-function openUser(id=''){if(!can('Utilisateurs'))return toast('Permission Utilisateurs requise.',true);let u=state.users.find(x=>x.id===id)||{name:'',email:'',role:'Vendeur',permissions:['Ventes','Stock'],active:true},perms=['Ventes','Stock','Factures','Utilisateurs'];modal(id?'Modifier le membre':'Inviter un membre',`<div class="modal-body"><form id="user-form" class="field-grid"><div class="field"><label>Nom complet</label><input name="name" required value="${esc(u.name)}" placeholder="Prénom Nom"></div><div class="field"><label>Adresse e-mail</label><input name="email" type="email" required value="${esc(u.email)}" placeholder="nom@shopkosomba.cg"></div><div class="field"><label>Rôle</label><select name="role" onchange="setRolePermissions(this.value)">${['Administratrice','Vendeur','Gestionnaire de stock','Comptable','Personnalisé'].map(r=>`<option ${u.role===r?'selected':''}>${r}</option>`).join('')}</select></div><div class="field"><label>Statut du compte</label><select name="active"><option value="true" ${u.active?'selected':''}>Actif</option><option value="false" ${!u.active?'selected':''}>Désactivé</option></select></div><div class="field full"><label>${id?'Nouveau mot de passe (facultatif)':'Mot de passe initial (12 caractères minimum)'}</label><input name="password" type="password" ${id?'':'required minlength="12"'} autocomplete="new-password"></div><div class="field full"><label>Permissions d’accès</label><div class="permission-list" id="permission-list">${perms.map(p=>`<label class="permission-option"><input type="checkbox" name="permissions" value="${p}" ${u.permissions.includes(p)?'checked':''}>${p}</label>`).join('')}</div></div></form></div>`,`<button class="button" onclick="closeModal()">Annuler</button><button class="button primary" onclick="saveUser('${id}')">${id?'Enregistrer':'Ajouter le membre'}</button>`,true)}
-function setRolePermissions(role){let sets={'Administratrice':['Ventes','Stock','Factures','Utilisateurs'],'Vendeur':['Ventes','Stock'],'Gestionnaire de stock':['Stock','Factures'],'Comptable':['Factures']},allowed=sets[role];if(!allowed)return;document.querySelectorAll('#permission-list input').forEach(c=>c.checked=allowed.includes(c.value))}
-function saveUser(id){if(!can('Utilisateurs'))return toast('Permission Utilisateurs requise.',true);let f=document.getElementById('user-form');if(!f.reportValidity())return;let fd=new FormData(f),password=fd.get('password'),d={name:fd.get('name').trim(),email:fd.get('email').trim(),role:fd.get('role'),active:fd.get('active')==='true',permissions:fd.getAll('permissions')};if(id)Object.assign(state.users.find(u=>u.id===id),d);else{d.id='u'+Date.now();state.users.push(d)}if(password)pendingPasswords[d.id]=password;log(`${id?'Accès modifiés pour':'Nouveau membre ajouté :'} <strong>${esc(d.name)}</strong>`,'users-round');save().then(ok=>{if(ok){closeModal();render();toast(id?'Membre mis à jour':'Membre ajouté à l’équipe')}})}
+function openUser(id=''){if(!can('Utilisateurs'))return toast('Permission Utilisateurs requise.',true);let u=state.users.find(x=>x.id===id)||{name:'',email:'',role:'Vendeur',permissions:['Ventes'],active:true},perms=['Ventes','Stock','Factures','Utilisateurs'];const normalizedPermissions=normalizeRolePermissions(u.role,u.permissions||[]);modal(id?'Modifier le membre':'Inviter un membre',`<div class="modal-body"><form id="user-form" class="field-grid"><div class="field"><label>Nom complet</label><input name="name" required value="${esc(u.name)}" placeholder="Prénom Nom"></div><div class="field"><label>Adresse e-mail</label><input name="email" type="email" required value="${esc(u.email)}" placeholder="nom@shopkosomba.cg"></div><div class="field"><label>Rôle</label><select name="role" onchange="setRolePermissions(this.value)">${['Administratrice','Vendeur','Gestionnaire de stock','Comptable','Personnalisé'].map(r=>`<option ${u.role===r?'selected':''}>${r}</option>`).join('')}</select></div><div class="field"><label>Statut du compte</label><select name="active"><option value="true" ${u.active?'selected':''}>Actif</option><option value="false" ${!u.active?'selected':''}>Désactivé</option></select></div><div class="field full"><label>${id?'Nouveau mot de passe (facultatif)':'Mot de passe initial (12 caractères minimum)'}</label><input name="password" type="password" ${id?'':'required minlength="12"'} autocomplete="new-password"></div><div class="field full"><label>Permissions d’accès</label><div class="permission-list" id="permission-list">${perms.map(p=>`<label class="permission-option"><input type="checkbox" name="permissions" value="${p}" ${normalizedPermissions.includes(p)?'checked':''}>${p}</label>`).join('')}</div></div></form></div>`,`<button class="button" onclick="closeModal()">Annuler</button><button class="button primary" onclick="saveUser('${id}')">${id?'Enregistrer':'Ajouter le membre'}</button>`,true)}
+function setRolePermissions(role){const allowed=ROLE_PERMISSIONS[role]||[];if(!allowed.length)return;document.querySelectorAll('#permission-list input').forEach(c=>c.checked=allowed.includes(c.value))}
+function saveUser(id){if(!can('Utilisateurs'))return toast('Permission Utilisateurs requise.',true);let f=document.getElementById('user-form');if(!f.reportValidity())return;let fd=new FormData(f),password=fd.get('password'),role=fd.get('role'),permissions=normalizeRolePermissions(role,fd.getAll('permissions')),d={name:fd.get('name').trim(),email:fd.get('email').trim(),role,active:fd.get('active')==='true',permissions};if(id)Object.assign(state.users.find(u=>u.id===id),d);else{d.id='u'+Date.now();state.users.push(d)}if(password)pendingPasswords[d.id]=password;log(`${id?'Accès modifiés pour':'Nouveau membre ajouté :'} <strong>${esc(d.name)}</strong>`,'users-round');save().then(ok=>{if(ok){closeModal();render();toast(id?'Membre mis à jour':'Membre ajouté à l’équipe')}})}
 function deleteUser(id){if(!can('Utilisateurs'))return toast('Permission Utilisateurs requise.',true);if(id===currentUser.id)return toast('Vous ne pouvez pas supprimer votre propre compte.',true);let u=state.users.find(x=>x.id===id);if(!confirm(`Supprimer le compte de ${u.name} ?`))return;state.users=state.users.filter(x=>x.id!==id);save().then(ok=>{if(ok){render();toast('Membre supprimé')}})}
 function log(text,iconName){state.activity.unshift({text,date:new Date().toISOString(),icon:iconName});state.activity=state.activity.slice(0,20)}
 document.getElementById('navigation').addEventListener('click',e=>{let b=e.target.closest('[data-page]');if(b)go(b.dataset.page)});document.querySelectorAll('.nav-item[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));document.getElementById('reset-business-data').addEventListener('click',resetBusinessData);document.getElementById('quick-add').addEventListener('click',()=>openProduct());document.getElementById('notification-button').addEventListener('click',toggleNotificationPanel);document.addEventListener('click',event=>{if(event.target.closest('.notification-wrap'))return;const panel=document.getElementById('notification-panel');panel.hidden=true;document.getElementById('notification-button').setAttribute('aria-expanded','false')});document.getElementById('menu-toggle').addEventListener('click',()=>{const s=document.getElementById('sidebar'),o=document.getElementById('sidebar-overlay');s.classList.toggle('open');o.classList.toggle('visible')});document.getElementById('sidebar-overlay').addEventListener('click',()=>{document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('visible')});document.getElementById('logout-button').addEventListener('click',logout);
